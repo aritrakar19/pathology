@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router";
+import { Outlet, Link, useLocation, useNavigate } from "react-router";
 import {
   Activity,
   LayoutDashboard,
@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import React from "react";
+import { signOut } from "firebase/auth";
+import { auth } from "../../firebase";
 
 interface DashboardLayoutProps {
   role: "admin" | "doctor" | "patient";
@@ -30,6 +32,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ role }: DashboardLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
@@ -77,6 +80,17 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
       : role === "doctor"
       ? "Dr. John Smith"
       : "Sarah Johnson";
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Error during logout", err);
+    } finally {
+      setProfileMenuOpen(false);
+      navigate("/login");
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-[#F4F8F7]">
@@ -181,13 +195,14 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
                     <User className="w-4 h-4" />
                     <span className="text-sm">Profile</span>
                   </button>
-                  <Link
-                    to="/login"
-                    className="w-full flex items-center gap-3 px-4 py-2 text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-red-500 transition-colors"
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-left text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-red-500 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Logout</span>
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>

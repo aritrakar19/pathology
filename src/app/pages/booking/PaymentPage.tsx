@@ -2,6 +2,8 @@ import { useState } from "react";
 import { CreditCard, Smartphone, Building, Wallet, CheckCircle, ArrowRight } from "lucide-react";
 import { BookingProgress } from "../../components/BookingProgress";
 import { useNavigate, useSearchParams } from "react-router";
+import { auth } from "../../../firebase";
+import { createBooking, getCurrentTenantId, type ServiceType } from "../../services/firebaseBookingService";
 
 const steps = ["Service", "Search", "Details", "Slot", "Patient Info", "Payment", "Confirm"];
 
@@ -55,8 +57,37 @@ export function PaymentPage() {
 
   const total = pricing.consultationFee + pricing.tax - pricing.discount;
 
-  const handlePayment = () => {
-    // Simulate payment processing
+  const handlePayment = async () => {
+    if (!selectedPayment) return;
+
+    try {
+      const user = auth.currentUser;
+      const tenantId = getCurrentTenantId();
+      const patientId = user?.uid ?? "anonymous";
+      const serviceType: ServiceType =
+        service === "doctor" ? "doctor_appointment" : "test";
+
+      await createBooking({
+        tenantId,
+        patientId,
+        serviceType,
+        patientName: user?.displayName ?? null ?? undefined,
+        serviceName:
+          service === "doctor"
+            ? "Doctor Appointment"
+            : service === "pathology"
+            ? "Pathology Test"
+            : "Clinic Visit",
+        bookingDate: date || undefined,
+        bookingTime: slot || undefined,
+        amount: total,
+      });
+    } catch (error) {
+      console.error("Failed to create booking", error);
+      alert("We could not save your booking. Please try again.");
+      return;
+    }
+
     navigate(`/booking/confirmation?service=${service}&id=${id}&date=${date}&slot=${slot}`);
   };
 

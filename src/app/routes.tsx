@@ -7,6 +7,7 @@ import { TrackReportPage } from "./pages/TrackReportPage";
 import { AboutPage } from "./pages/AboutPage";
 import { ContactPage } from "./pages/ContactPage";
 import { LoginPage } from "./pages/LoginPage";
+import { SignupPage } from "./pages/SignupPage";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { ManageDoctors } from "./pages/admin/ManageDoctors";
 import { ManagePatients } from "./pages/admin/ManagePatients";
@@ -62,6 +63,11 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+    errorElement: <AppErrorBoundary />,
+  },
+  {
+    path: "/signup",
+    element: <SignupPage />,
     errorElement: <AppErrorBoundary />,
   },
   {
