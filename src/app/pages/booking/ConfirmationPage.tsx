@@ -21,8 +21,40 @@ export function ConfirmationPage() {
   };
 
   const handleDownloadInvoice = () => {
-    // In a real app, this would download a PDF
-    alert("Invoice download would start here");
+    const invoiceContent = `
+=========================================
+          MEDIPATH INVOICE
+=========================================
+Appointment ID:  ${appointmentId}
+Date:            ${new Date().toLocaleDateString()}
+Status:          CONFIRMED
+
+Service Details:
+-----------------------------------------
+Service Type:    ${service.toUpperCase()}
+Item/Test:       ${getServiceName()}
+Slot Date:       ${date || "N/A"}
+Slot Time:       ${slot || "N/A"}
+
+Location:
+-----------------------------------------
+Downtown Medical Center
+123 Main Street, Downtown, NY 10001
+
+=========================================
+Thank you for choosing MediPath Diagnostics!
+For any queries, contact support@medipath.com
+`;
+
+    const blob = new Blob([invoiceContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Invoice_${appointmentId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (

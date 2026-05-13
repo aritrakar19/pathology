@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import { PublicLayout } from "./layouts/PublicLayout";
 import { DashboardLayout } from "./layouts/DashboardLayout";
+import { UserLayout } from "./layouts/UserLayout";
 import { LandingPage } from "./pages/LandingPage";
 import { BookTestPage } from "./pages/BookTestPage";
 import { TrackReportPage } from "./pages/TrackReportPage";
@@ -44,7 +45,36 @@ import { PaymentPage } from "./pages/booking/PaymentPage";
 import { ConfirmationPage } from "./pages/booking/ConfirmationPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { AppErrorBoundary } from "./pages/AppErrorBoundary";
+
+// User Application Pages
+import { UserHome } from "./pages/user/UserHome";
+import { BookTest } from "./pages/user/BookTest";
+import { TestDetails } from "./pages/user/TestDetails";
+import { BookDoctor } from "./pages/user/BookDoctor";
+import { DoctorProfile } from "./pages/user/DoctorProfile";
+import { Pharmacy } from "./pages/user/Pharmacy";
+import { Cart } from "./pages/user/Cart";
+import { Checkout } from "./pages/user/Checkout";
+import { Tracking } from "./pages/user/Tracking";
+import { Reports } from "./pages/user/Reports";
+import { AIAssistant } from "./pages/user/AIAssistant";
+import { Profile } from "./pages/user/Profile";
+import { SettingsPage as UserSettings } from "./pages/user/Settings";
+import { UserLogin } from "./pages/user/UserLogin";
+import { UserSignup } from "./pages/user/UserSignup";
+import { ForgotPassword } from "./pages/user/ForgotPassword";
+import { ProfileProvider } from "./context/ProfileContext";
+import { BookingProvider } from "./context/BookingContext";
+import { CartProvider } from "./context/CartContext";
+import { ChooseSampleMethod } from "./pages/user/ChooseSampleMethod";
+import { SelectSlot } from "./pages/user/SelectSlot";
+import { PatientDetails } from "./pages/user/PatientDetails";
+import { Payment } from "./pages/user/Payment";
+import { BookingSuccess } from "./pages/user/BookingSuccess";
+import { ReportDetails } from "./pages/user/ReportDetails";
+import { TestCategory } from "./pages/user/TestCategory";
 import React from "react";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -70,6 +100,64 @@ export const router = createBrowserRouter([
     element: <SignupPage />,
     errorElement: <AppErrorBoundary />,
   },
+  // ─── User Application Auth ──────────────────────────────────
+  {
+    path: "/user-login",
+    element: <UserLogin />,
+    errorElement: <AppErrorBoundary />,
+  },
+  {
+    path: "/user-signup",
+    element: <UserSignup />,
+    errorElement: <AppErrorBoundary />,
+  },
+  {
+    path: "/user-forgot-password",
+    element: <ForgotPassword />,
+    errorElement: <AppErrorBoundary />,
+  },
+  // ─── User Application (Patient Side) ────────────────────────
+  {
+    path: "/user",
+    element: (
+      <ProtectedRoute allowedRoles={["user", "patient"]}>
+        <ProfileProvider>
+          <BookingProvider>
+            <CartProvider>
+              <UserLayout />
+            </CartProvider>
+          </BookingProvider>
+        </ProfileProvider>
+      </ProtectedRoute>
+    ),
+    errorElement: <AppErrorBoundary />,
+    children: [
+      { index: true, element: <UserHome /> },
+      { path: "home", element: <UserHome /> },
+      { path: "book-test", element: <BookTest /> },
+      { path: "test-category/:id", element: <TestCategory /> },
+      { path: "test-details/:id", element: <TestDetails /> },
+      { path: "book-doctor", element: <BookDoctor /> },
+      { path: "doctor-profile/:id", element: <DoctorProfile /> },
+      { path: "pharmacy", element: <Pharmacy /> },
+      { path: "cart", element: <Cart /> },
+      { path: "checkout", element: <Checkout /> },
+      { path: "tracking", element: <Tracking /> },
+      { path: "report-history", element: <Reports /> },
+      { path: "reports", element: <Reports /> },
+      { path: "report-details/:id", element: <ReportDetails /> },
+      { path: "booking-summary", element: <ChooseSampleMethod /> },
+      { path: "select-slot", element: <SelectSlot /> },
+      { path: "patient-details", element: <PatientDetails /> },
+      { path: "payment", element: <Payment /> },
+      { path: "booking-success", element: <BookingSuccess /> },
+      { path: "ai-assistant", element: <AIAssistant /> },
+      { path: "profile", element: <Profile /> },
+      { path: "settings", element: <UserSettings /> },
+      { path: "*", element: <NotFoundPage /> },
+    ],
+  },
+  // ─── Booking Flow ───────────────────────────────────────────
   {
     path: "/booking",
     element: <PublicLayout />,
@@ -85,9 +173,10 @@ export const router = createBrowserRouter([
       { path: "*", element: <NotFoundPage /> },
     ],
   },
+  // ─── Admin Dashboard ────────────────────────────────────────
   {
     path: "/admin",
-    element: <DashboardLayout role="admin" />,
+    element: <ProtectedRoute allowedRoles={["admin"]}><DashboardLayout role="admin" /></ProtectedRoute>,
     errorElement: <AppErrorBoundary />,
     children: [
       { index: true, element: <AdminDashboard /> },
@@ -110,9 +199,10 @@ export const router = createBrowserRouter([
       { path: "*", element: <NotFoundPage /> },
     ],
   },
+  // ─── Doctor Dashboard ───────────────────────────────────────
   {
     path: "/doctor",
-    element: <DashboardLayout role="doctor" />,
+    element: <ProtectedRoute allowedRoles={["doctor"]}><DashboardLayout role="doctor" /></ProtectedRoute>,
     errorElement: <AppErrorBoundary />,
     children: [
       { index: true, element: <DoctorDashboard /> },
@@ -121,9 +211,10 @@ export const router = createBrowserRouter([
       { path: "appointments", element: <DoctorAppointments /> },
     ],
   },
+  // ─── Patient Dashboard ──────────────────────────────────────
   {
     path: "/patient",
-    element: <DashboardLayout role="patient" />,
+    element: <ProtectedRoute allowedRoles={["patient", "user"]}><DashboardLayout role="patient" /></ProtectedRoute>,
     errorElement: <AppErrorBoundary />,
     children: [
       { index: true, element: <PatientDashboard /> },

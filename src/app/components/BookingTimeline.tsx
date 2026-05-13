@@ -1,8 +1,8 @@
 import React from "react";
 import { Check } from "lucide-react";
-import type { BookingStatusId } from "../services/firebaseBookingService";
+import type { BookingStatus } from "../services/BookingService";
 
-const WORKFLOW_STEPS: { id: BookingStatusId; label: string }[] = [
+const WORKFLOW_STEPS: { id: BookingStatus; label: string }[] = [
   { id: "booking_confirmed", label: "Booking Confirmed" },
   { id: "sample_collection_scheduled", label: "Sample Scheduled" },
   { id: "sample_collected", label: "Sample Collected" },
@@ -14,7 +14,7 @@ const WORKFLOW_STEPS: { id: BookingStatusId; label: string }[] = [
 ];
 
 interface BookingTimelineProps {
-  status: BookingStatusId;
+  status: BookingStatus;
 }
 
 export function BookingTimeline({ status }: BookingTimelineProps) {
