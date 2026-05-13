@@ -14,14 +14,15 @@ import {
 } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBtTAgtgCPSs483Gx0eZ1bpS1x8vrA2LSA",
-  authDomain: "medipath-61a3d.firebaseapp.com",
-  projectId: "medipath-61a3d",
-  storageBucket: "medipath-61a3d.firebasestorage.app",
-  messagingSenderId: "745858032358",
-  appId: "1:745858032358:web:845dffbce7f3fe7a97d127",
-  measurementId: "G-C6ZCEBBWEH",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
+
 
 // Initialize Firebase (client-side)
 const app = initializeApp(firebaseConfig);
@@ -34,18 +35,19 @@ export const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
 
-export type UserRole = "admin" | "doctor" | "patient";
+export type UserRole = "admin" | "doctor" | "patient" | "user";
 
 export interface AppUser {
   uid: string;
   name: string | null;
   email: string | null;
+  phone?: string | null;
   photoURL: string | null;
   role: UserRole;
   createdAt: string;
 }
 
-const USERS_COLLECTION = "user";
+const USERS_COLLECTION = "users";
 
 export async function signInWithGooglePopup() {
   const result = await signInWithPopup(auth, provider);
@@ -60,7 +62,7 @@ export async function getUserRole(uid: string): Promise<UserRole | null> {
   return (data.role as UserRole | undefined) ?? null;
 }
 
-export async function saveUserWithRole(user: User, role: UserRole): Promise<void> {
+export async function saveUserWithRole(user: User, role: UserRole, phone?: string): Promise<void> {
   const ref = doc(db, USERS_COLLECTION, user.uid);
   const now = new Date().toISOString();
 
@@ -68,6 +70,7 @@ export async function saveUserWithRole(user: User, role: UserRole): Promise<void
     uid: user.uid,
     name: user.displayName ?? null,
     email: user.email ?? null,
+    phone: phone ?? null,
     photoURL: user.photoURL ?? null,
     role,
     createdAt: now,

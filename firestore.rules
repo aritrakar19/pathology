@@ -9,28 +9,45 @@ service cloud.firestore {
     }
 
     // Users: each document id is the auth uid.
-    match /user/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // - Any authenticated user can read their own doc (getUserRole).
+    // - Any authenticated user can create/update their own doc (saveUserWithRole).
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
     }
 
     // Bookings: multi-tenant and per-patient access control.
     match /bookings/{bookingId} {
-      allow read: if isTenantMatch() && (isAdminForTenant() || isOwnBooking());
-      allow write: if isTenantMatch() && isAdminForTenant();
-
-      function isTenantMatch() {
-        return request.resource.data.tenant_id == resource.data.tenant_id;
-      }
+      allow read: if request.auth != null && (isAdminForTenant() || isOwnBooking());
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && isAdminForTenant();
+      allow delete: if false;
 
       function isOwnBooking() {
-        return request.auth != null && resource.data.patient_id == request.auth.uid;
+        return resource.data.userId == request.auth.uid;
       }
 
       function isAdminForTenant() {
-        return request.auth != null &&
-          exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+        return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
       }
+    }
+
+    match /medicines/{medicineId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // Allow checkout to reduce stock
+    }
+
+    match /doctors/{doctorId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
     }
   }
 }

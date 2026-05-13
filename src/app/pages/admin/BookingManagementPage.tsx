@@ -1,34 +1,23 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { AdminBookingManager } from "../../components/AdminBookingManager";
-import {
-  subscribeBookingUpdates,
-  updateBookingStatus,
-  getCurrentTenantId,
-  type BookingRecord,
-  type BookingStatusId,
-} from "../../services/firebaseBookingService";
+import { Booking, BookingService, BookingStatus } from "../../services/BookingService";
+import { toast } from "sonner";
 
 export function BookingManagementPage() {
-  const [bookings, setBookings] = React.useState<BookingRecord[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
 
-  React.useEffect(() => {
-    const tenantId = getCurrentTenantId();
-    const unsub = subscribeBookingUpdates({
-      tenantId,
-      onChange: setBookings,
-    });
+  useEffect(() => {
+    const unsub = BookingService.subscribeToAllBookings(setBookings);
     return () => unsub();
   }, []);
 
-  const handleStatusChange = async (booking: BookingRecord, status: BookingStatusId) => {
+  const handleStatusChange = async (booking: Booking, status: BookingStatus) => {
     try {
-      await updateBookingStatus(booking.tenant_id, booking.booking_id, status);
-      // optional feedback, keep subtle to not disrupt UX
-      // eslint-disable-next-line no-alert
-      alert(`Booking status updated to "${status.replace(/_/g, " ")}".`);
+      await BookingService.updateBookingStatus(booking.bookingId, status, `Admin updated status to ${status}`);
+      toast.success(`Booking status updated to "${status.replace(/_/g, " ")}".`);
     } catch (err) {
       console.error("Failed to update booking status", err);
-      alert("Could not update booking status. Please try again.");
+      toast.error("Could not update booking status. Please try again.");
     }
   };
 

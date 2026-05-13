@@ -1,34 +1,34 @@
 import React from "react";
 import { Search, Filter, Eye } from "lucide-react";
-import type { BookingRecord, BookingStatusId } from "../services/firebaseBookingService";
+import type { Booking, BookingStatus } from "../services/BookingService";
 import { BookingTimeline } from "./BookingTimeline";
 import { StatusUpdatePanel } from "./StatusUpdatePanel";
 
 interface AdminBookingManagerProps {
-  bookings: BookingRecord[];
-  onStatusChange: (booking: BookingRecord, status: BookingStatusId) => void;
+  bookings: Booking[];
+  onStatusChange: (booking: Booking, status: BookingStatus) => void;
 }
 
 export function AdminBookingManager({ bookings, onStatusChange }: AdminBookingManagerProps) {
-  const [selectedId, setSelectedId] = React.useState<string | null>(bookings[0]?.booking_id ?? null);
+  const [selectedId, setSelectedId] = React.useState<string | null>(bookings[0]?.bookingId ?? null);
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
   const selectedBooking =
-    bookings.find((b) => b.booking_id === selectedId) ?? bookings[0] ?? null;
+    bookings.find((b) => b.bookingId === selectedId) ?? bookings[0] ?? null;
 
   const filtered = bookings.filter((booking) => {
     const matchesSearch =
       !search ||
-      booking.booking_id.toLowerCase().includes(search.toLowerCase()) ||
-      (booking.patient_name ?? "")
+      booking.bookingId.toLowerCase().includes(search.toLowerCase()) ||
+      (booking.patientName ?? "")
         .toLowerCase()
         .includes(search.toLowerCase()) ||
-      (booking.service_name ?? "")
+      (booking.testName ?? booking.serviceType ?? "")
         .toLowerCase()
         .includes(search.toLowerCase());
 
-    const matchesStatus = statusFilter === "all" || booking.booking_status === statusFilter;
+    const matchesStatus = statusFilter === "all" || booking.bookingStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -82,33 +82,32 @@ export function AdminBookingManager({ bookings, onStatusChange }: AdminBookingMa
             </thead>
             <tbody className="divide-y divide-[#E6F0EE]">
               {filtered.map((booking) => {
-                const isSelected = booking.booking_id === selectedBooking?.booking_id;
+                const isSelected = booking.bookingId === selectedBooking?.bookingId;
                 return (
                   <tr
-                    key={booking.booking_id}
+                    key={booking.bookingId}
                     className={isSelected ? "bg-[#F4F8F7]" : "bg-white hover:bg-[#F9FBFA] transition-colors"}
                   >
                     <td className="px-4 py-3 font-mono text-xs text-[#1C2B2A]">
-                      {booking.booking_id}
+                      {booking.bookingId.substring(0, 8)}
                     </td>
                     <td className="px-4 py-3 text-[#1C2B2A]">
-                      {booking.patient_name ?? "—"}
+                      {booking.patientName ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-[#6B7C7B]">
-                      {booking.service_name ?? booking.service_type}
+                      {booking.testName ?? booking.serviceType}
                     </td>
                     <td className="px-4 py-3 text-xs text-[#6B7C7B]">
-                      {booking.booking_date ?? "—"}
-                      {booking.booking_time && ` · ${booking.booking_time}`}
+                      {new Date(booking.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#E6F0EE] text-[#1C2B2A]">
-                        {booking.booking_status.replace(/_/g, " ")}
+                        {booking.bookingStatus.replace(/_/g, " ")}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => setSelectedId(booking.booking_id)}
+                        onClick={() => setSelectedId(booking.bookingId)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-[#E6F0EE] text-[#1FAF9A] hover:border-[#1FAF9A] hover:bg-[#E6F0EE] transition-all"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -139,15 +138,15 @@ export function AdminBookingManager({ bookings, onStatusChange }: AdminBookingMa
               <div>
                 <p className="text-xs text-[#6B7C7B] mb-1">Booking</p>
                 <h2 className="text-lg font-semibold text-[#1C2B2A]">
-                  {selectedBooking.service_name ?? selectedBooking.service_type}
+                  {selectedBooking.testName ?? selectedBooking.serviceType}
                 </h2>
                 <p className="text-xs font-mono text-[#6B7C7B]">
-                  {selectedBooking.booking_id}
+                  {selectedBooking.bookingId}
                 </p>
               </div>
             </div>
 
-            <BookingTimeline status={selectedBooking.booking_status} />
+            <BookingTimeline status={selectedBooking.bookingStatus} />
 
             <StatusUpdatePanel booking={selectedBooking} onStatusChange={onStatusChange} />
           </>
