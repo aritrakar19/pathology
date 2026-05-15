@@ -49,6 +49,21 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
     }
+
+    match /master_tests/{testId} {
+      allow read: if true; // Public or authenticated depending on app needs, but read-only for public
+      allow write: if request.auth != null && isAdminForTenant(); // Central admin in a real app
+    }
+
+    match /tenant_tests/{tenantTestId} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdminForTenant();
+    }
+
+    match /packages/{packageId} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdminForTenant();
+    }
   }
 }
 

@@ -2,21 +2,14 @@ import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router";
 import {
   Activity,
-  Home,
-  TestTube,
-  Stethoscope,
-  Pill,
-  ClipboardList,
-  FileText,
-  User,
-  Settings,
   Bell,
   Search,
   MapPin,
   ChevronDown,
   LogOut,
-  Bot,
-  Menu,
+  User,
+  Settings,
+  ChevronRight,
   X,
 } from "lucide-react";
 import { BottomNav } from "../components/user/BottomNav";
@@ -26,24 +19,12 @@ import { auth } from "../../firebase";
 import { toast } from "sonner";
 import { useUserProfile } from "../context/ProfileContext";
 
-const sidebarItems = [
-  { path: "/user/home", label: "Home", icon: Home },
-  { path: "/user/book-test", label: "Book Test", icon: TestTube },
-  { path: "/user/book-doctor", label: "Doctors", icon: Stethoscope },
-  { path: "/user/pharmacy", label: "Pharmacy", icon: Pill },
-  { path: "/user/tracking", label: "Tracking", icon: ClipboardList },
-  { path: "/user/reports", label: "Reports", icon: FileText },
-  { path: "/user/ai-assistant", label: "AI Assistant", icon: Bot },
-  { path: "/user/profile", label: "Profile", icon: User },
-  { path: "/user/settings", label: "Settings", icon: Settings },
-];
-
 export function UserLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { profile } = useUserProfile();
 
   const handleLogout = async () => {
@@ -65,133 +46,48 @@ export function UserLayout() {
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
+  const isHomePage = location.pathname === "/user/home" || location.pathname === "/user";
+
   return (
-    <div className="min-h-screen flex bg-[#F4F8F7]">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 bg-white border-r border-[#E6F0EE] fixed h-screen z-40 flex-col">
-        {/* Logo */}
-        <div className="h-16 border-b border-[#E6F0EE] flex items-center px-5">
-          <Link to="/user/home" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] rounded-xl flex items-center justify-center">
-              <Activity className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-[#F4F8F7] flex flex-col">
+      {/* ─── TOP NAV BAR ─────────────────────────────────────────── */}
+      <header className="sticky top-0 z-40 bg-white/98 backdrop-blur-2xl border-b border-[#E6F0EE] shadow-[0_2px_20px_rgba(31,175,154,0.06)]">
+        <div className="flex items-center justify-between h-14 md:h-16 px-4 md:px-6 max-w-screen-xl mx-auto">
+          
+          {/* Left: Logo */}
+          <Link to="/user/home" className="flex items-center gap-2.5 flex-shrink-0">
+            <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] rounded-xl flex items-center justify-center shadow-md shadow-[#1FAF9A]/25">
+              <Activity className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
-            <span className="text-xl font-semibold text-[#1C2B2A]">MediPath</span>
+            <span className="text-base md:text-lg font-bold text-[#1C2B2A] tracking-tight">MediPath</span>
           </Link>
-        </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-6 px-3 overflow-y-auto">
-          <div className="space-y-1">
-            {sidebarItems.map((item) => {
-              const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? "bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white shadow-lg shadow-[#1FAF9A]/25"
-                      : "text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-[#1FAF9A]"
-                  }`}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-[#E6F0EE]">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-3 w-full rounded-xl text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-red-500 transition-all"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm">Logout</span>
+          {/* Center: Location (md+) */}
+          <button className="hidden md:flex items-center gap-1.5 text-sm text-[#1C2B2A] hover:text-[#1FAF9A] transition-colors px-3 py-1.5 rounded-xl hover:bg-[#F4F8F7]">
+            <MapPin className="w-4 h-4 text-[#1FAF9A]" />
+            <span className="font-medium">Delhi NCR</span>
+            <ChevronDown className="w-3.5 h-3.5 text-[#6B7C7B]" />
           </button>
-        </div>
-      </aside>
 
-      {/* Mobile Sidebar Overlay */}
-      {mobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-72 bg-white flex flex-col animate-in slide-in-from-left duration-300">
-            <div className="h-16 border-b border-[#E6F0EE] flex items-center justify-between px-5">
-              <Link to="/user/home" className="flex items-center gap-2" onClick={() => setMobileSidebarOpen(false)}>
-                <div className="w-10 h-10 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] rounded-xl flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-xl font-semibold text-[#1C2B2A]">MediPath</span>
-              </Link>
-              <button onClick={() => setMobileSidebarOpen(false)} className="text-[#6B7C7B]">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <nav className="flex-1 py-6 px-3 overflow-y-auto">
-              <div className="space-y-1">
-                {sidebarItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setMobileSidebarOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
-                        isActive
-                          ? "bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white shadow-lg shadow-[#1FAF9A]/25"
-                          : "text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-[#1FAF9A]"
-                      }`}
-                    >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="text-sm">{item.label}</span>
-                    </Link>
-                  );
-                })}
+          {/* Right: Actions */}
+          <div className="flex items-center gap-1 md:gap-2">
+            {/* Search (mobile icon, desktop expanded) */}
+            <div className="hidden md:block">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7C7B]" />
+                <input
+                  type="text"
+                  placeholder="Search tests, doctors..."
+                  className="pl-9 pr-4 py-2 bg-[#F4F8F7] border border-[#E6F0EE] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1FAF9A] focus:border-transparent transition-all w-56"
+                />
               </div>
-            </nav>
-          </aside>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 md:ml-64 transition-all duration-300">
-        {/* Top Navbar */}
-        <header className="h-16 bg-white/95 backdrop-blur-sm border-b border-[#E6F0EE] flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
-          <div className="flex items-center gap-3 flex-1">
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden p-2 text-[#1C2B2A] hover:bg-[#F4F8F7] rounded-xl transition-colors"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-
-            {/* Location selector */}
-            <button className="hidden sm:flex items-center gap-1.5 text-sm text-[#1C2B2A] hover:text-[#1FAF9A] transition-colors">
-              <MapPin className="w-4 h-4 text-[#1FAF9A]" />
-              <span className="font-medium">Delhi NCR</span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#6B7C7B]" />
-            </button>
-
-            {/* Desktop Search */}
-            <div className="hidden md:block relative max-w-md w-full ml-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7C7B]" />
-              <input
-                type="text"
-                placeholder="Search tests, doctors, medicines..."
-                className="w-full pl-10 pr-4 py-2.5 bg-[#F4F8F7] border border-[#E6F0EE] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1FAF9A] focus:border-transparent transition-all"
-              />
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-3">
-            {/* Mobile search */}
-            <button className="md:hidden p-2 text-[#6B7C7B] hover:text-[#1FAF9A] hover:bg-[#F4F8F7] rounded-xl transition-colors">
+            
+            {/* Mobile Search Toggle */}
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-[#1FAF9A] transition-all"
+            >
               <Search className="w-5 h-5" />
             </button>
 
@@ -199,86 +95,133 @@ export function UserLayout() {
             <div className="relative">
               <button
                 onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
-                className="relative p-2 text-[#6B7C7B] hover:text-[#1FAF9A] hover:bg-[#F4F8F7] rounded-xl transition-colors"
+                className="relative w-9 h-9 flex items-center justify-center rounded-xl text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-[#1FAF9A] transition-all"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">
-                    {unreadCount}
-                  </span>
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
                 )}
               </button>
 
               {notifOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-[#E6F0EE] py-3 z-50">
-                  <div className="px-4 pb-2 border-b border-[#E6F0EE]">
-                    <h3 className="font-semibold text-[#1C2B2A] text-sm">Notifications</h3>
-                  </div>
-                  {notifications.map((n) => (
-                    <div key={n.id} className={`px-4 py-3 hover:bg-[#F4F8F7] transition-colors cursor-pointer ${n.unread ? "bg-[#F4F8F7]/50" : ""}`}>
-                      <p className="text-sm text-[#1C2B2A]">{n.text}</p>
-                      <p className="text-xs text-[#6B7C7B] mt-0.5">{n.time}</p>
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl shadow-black/10 border border-[#E6F0EE] py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 pb-2 border-b border-[#E6F0EE] flex items-center justify-between">
+                      <h3 className="font-semibold text-[#1C2B2A] text-sm">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <span className="text-xs text-[#1FAF9A] font-medium">{unreadCount} new</span>
+                      )}
                     </div>
-                  ))}
-                </div>
+                    <div className="max-h-72 overflow-y-auto">
+                      {notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className={`px-4 py-3 hover:bg-[#F4F8F7] transition-colors cursor-pointer border-b border-[#E6F0EE]/50 last:border-0 ${
+                            n.unread ? "bg-[#1FAF9A]/3" : ""
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {n.unread && <div className="w-2 h-2 rounded-full bg-[#1FAF9A] flex-shrink-0 mt-1.5" />}
+                            <div className={n.unread ? "" : "ml-5"}>
+                              <p className="text-sm text-[#1C2B2A] leading-snug">{n.text}</p>
+                              <p className="text-xs text-[#6B7C7B] mt-0.5">{n.time}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
 
-            {/* Profile */}
+            {/* Profile Avatar */}
             <div className="relative">
               <button
                 onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
-                className="flex items-center gap-2 px-2 py-1.5 hover:bg-[#F4F8F7] rounded-xl transition-colors"
+                className="w-9 h-9 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] rounded-xl flex items-center justify-center text-white text-sm font-bold uppercase shadow-md shadow-[#1FAF9A]/25 hover:shadow-lg hover:shadow-[#1FAF9A]/30 transition-all"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] rounded-full flex items-center justify-center text-white text-sm font-semibold uppercase">
-                  {profile?.fullName?.charAt(0) || "U"}
-                </div>
-                <div className="text-left hidden lg:block">
-                  <p className="text-sm text-[#1C2B2A] font-medium">{profile?.fullName ? profile.fullName.split(" ")[0] : "User"}</p>
-                </div>
+                {profile?.fullName?.charAt(0) || "U"}
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-[#E6F0EE] py-2 z-50">
-                  <Link
-                    to="/user/profile"
-                    onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2 text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-[#1FAF9A] transition-colors"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="text-sm">Profile</span>
-                  </Link>
-                  <Link
-                    to="/user/settings"
-                    onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2 text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-[#1FAF9A] transition-colors"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span className="text-sm">Settings</span>
-                  </Link>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-red-500 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span className="text-sm">Logout</span>
-                  </button>
-                </div>
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl shadow-black/10 border border-[#E6F0EE] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-3 border-b border-[#E6F0EE]">
+                      <p className="font-semibold text-[#1C2B2A] text-sm">{profile?.fullName || "User"}</p>
+                      <p className="text-xs text-[#6B7C7B] truncate">{profile?.email || ""}</p>
+                    </div>
+                    <Link
+                      to="/user/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center justify-between px-4 py-2.5 text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-[#1FAF9A] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <User className="w-4 h-4" />
+                        <span className="text-sm">My Profile</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                    <Link
+                      to="/user/settings"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center justify-between px-4 py-2.5 text-[#6B7C7B] hover:bg-[#F4F8F7] hover:text-[#1FAF9A] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Settings className="w-4 h-4" />
+                        <span className="text-sm">Settings</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                    <div className="border-t border-[#E6F0EE] mt-1 pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span className="text-sm font-medium">Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
-        </header>
+        </div>
 
-        {/* Page Content */}
-        <main className="p-4 md:p-6 pb-24 md:pb-6">
-          <Outlet />
-        </main>
-      </div>
+        {/* Mobile Search Expand */}
+        {searchOpen && (
+          <div className="md:hidden px-4 pb-3 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7C7B]" />
+              <input
+                type="text"
+                autoFocus
+                placeholder="Search tests, doctors, medicines..."
+                className="w-full pl-10 pr-10 py-3 bg-[#F4F8F7] border border-[#E6F0EE] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1FAF9A] focus:border-transparent transition-all"
+              />
+              <button
+                onClick={() => setSearchOpen(false)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7C7B]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </header>
 
-      {/* Bottom Navigation (Mobile) */}
+      {/* ─── MAIN CONTENT ─────────────────────────────────────────── */}
+      <main className="flex-1 max-w-screen-xl w-full mx-auto px-4 md:px-6 py-4 md:py-6 pb-24 md:pb-8">
+        <Outlet />
+      </main>
+
+      {/* ─── BOTTOM NAVIGATION (Mobile) ────────────────────────────── */}
       <BottomNav />
 
-      {/* Floating Action Button */}
+      {/* ─── FLOATING ACTION BUTTON ────────────────────────────────── */}
       <FloatingActionButton />
     </div>
   );

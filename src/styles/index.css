@@ -2,9 +2,7 @@
 @import './tailwind.css';
 @import './theme.css';
 
-/* ─── User App Utilities ───────────────────────────────────── */
-
-/* Hide scrollbar for category scrollers */
+/* ─── Hide scrollbar for horizontal scrollers ───────────────────── */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -13,18 +11,30 @@
   display: none;
 }
 
-/* Safe area for bottom nav on notched devices */
+/* ─── Safe area for bottom nav on notched devices ───────────────── */
 .safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 8px);
 }
 
-/* Smooth scroll behavior */
+/* ─── Smooth scroll + font ──────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Prevents content shift on scrollbar appearing */
+  overflow-y: scroll;
 }
 
-/* Line clamp utilities */
+/* ─── Mobile touch optimizations ───────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+button, a {
+  touch-action: manipulation;
+}
+
+/* ─── Line clamp utilities ──────────────────────────────────────── */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -37,12 +47,97 @@ html {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
-/* ─── Premium micro animations ─────────────────────────────── */
+/* ─── Premium animations ────────────────────────────────────────── */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-6px); }
 }
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+/* ─── Loading skeleton shimmer ───────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f4f3 25%,
+    #e6f0ee 50%,
+    #f0f4f3 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.75rem;
+}
+
+/* ─── Smooth page transitions ────────────────────────────────────── */
+.page-transition {
+  animation: fade-in 0.25s ease-out;
+}
+
+/* ─── Thumb-friendly minimum touch targets ──────────────────────── */
+.touch-target {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* ─── Premium glass morphism ─────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ─── Bottom nav height variable ─────────────────────────────────── */
+:root {
+  --bottom-nav-height: 64px;
+}
+
+/* ─── Prevent iOS bounce on fixed elements ───────────────────────── */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* ─── Custom scrollbar for desktop ──────────────────────────────── */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #F4F8F7;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #C5DAD7;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #1FAF9A;
+  }
 }
