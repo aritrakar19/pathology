@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import {
-  ArrowRight,
   TestTube,
   Stethoscope,
   Pill,
@@ -9,28 +8,36 @@ import {
   Bot,
   ChevronRight,
   TrendingUp,
-  ChevronLeft,
+  ArrowRight,
+  MapPin,
+  Clock,
+  Zap,
   Heart,
   Shield,
+  Package,
 } from "lucide-react";
-import { SearchBar } from "../../components/user/SearchBar";
 import { TestCard } from "../../components/user/TestCard";
 import { DoctorCard } from "../../components/user/DoctorCard";
-import { MedicineCard } from "../../components/user/MedicineCard";
 import { StatusBadge } from "../../components/user/StatusBadge";
 import {
   healthCategories,
   testPackages,
   doctors,
   medicines,
-  healthTimelines,
   banners,
 } from "../../data/mockData";
 import { useUserProfile } from "../../context/ProfileContext";
 import { Booking, BookingService } from "../../services/BookingService";
 
 const getStatusLabel = (status: string) => {
-  return status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  return status.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+};
+
+const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
 };
 
 export function UserHome() {
@@ -56,177 +63,87 @@ export function UserHome() {
   }, []);
 
   const quickActions = [
-    { label: "Book Lab Test", icon: TestTube, path: "/user/book-test", emoji: "🧪", gradient: "from-[#1FAF9A]/10 to-[#0E7C6B]/10", iconColor: "text-[#1FAF9A]" },
-    { label: "Book Doctor", icon: Stethoscope, path: "/user/book-doctor", emoji: "👨‍⚕️", gradient: "from-blue-50 to-indigo-50", iconColor: "text-blue-500" },
-    { label: "Order Medicine", icon: Pill, path: "/user/pharmacy", emoji: "💊", gradient: "from-purple-50 to-pink-50", iconColor: "text-purple-500" },
-    { label: "View Reports", icon: FileText, path: "/user/reports", emoji: "📄", gradient: "from-amber-50 to-orange-50", iconColor: "text-amber-500" },
+    {
+      label: "Book Lab Test",
+      icon: TestTube,
+      path: "/user/book-test",
+      emoji: "🧪",
+      bg: "bg-gradient-to-br from-[#1FAF9A]/10 to-[#0E7C6B]/5",
+      border: "border-[#1FAF9A]/20",
+      iconBg: "bg-[#1FAF9A]/10",
+      iconColor: "text-[#1FAF9A]",
+      tag: "500+ Tests",
+    },
+    {
+      label: "Book Doctor",
+      icon: Stethoscope,
+      path: "/user/book-doctor",
+      emoji: "👨‍⚕️",
+      bg: "bg-gradient-to-br from-blue-50 to-indigo-50/50",
+      border: "border-blue-100",
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-500",
+      tag: "Online & Clinic",
+    },
+    {
+      label: "Pharmacy",
+      icon: Pill,
+      path: "/user/pharmacy",
+      emoji: "💊",
+      bg: "bg-gradient-to-br from-purple-50 to-pink-50/50",
+      border: "border-purple-100",
+      iconBg: "bg-purple-50",
+      iconColor: "text-purple-500",
+      tag: "Fast Delivery",
+    },
+    {
+      label: "My Reports",
+      icon: FileText,
+      path: "/user/reports",
+      emoji: "📄",
+      bg: "bg-gradient-to-br from-amber-50 to-orange-50/50",
+      border: "border-amber-100",
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-500",
+      tag: "View & Download",
+    },
   ];
 
+  const latestBooking = recentBookings[0];
+  const hasActiveBooking = latestBooking &&
+    !["delivered", "report_generated"].includes(latestBooking.bookingStatus);
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* ─── HERO SECTION ──────────────────────────────────────────── */}
-      <section className="relative bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] rounded-3xl p-6 md:p-10 overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/3 -translate-x-1/4" />
-        <div className="absolute top-10 right-20 w-3 h-3 bg-white/20 rounded-full" />
-        <div className="absolute bottom-10 right-40 w-2 h-2 bg-white/30 rounded-full" />
+    <div className="space-y-5 md:space-y-8">
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex-1">
-            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
-              <Shield className="w-4 h-4 text-white" />
-              <span className="text-sm text-white/90 font-medium">Smart Healthcare Platform</span>
-            </div>
-            <h1 className="text-2xl md:text-4xl font-bold text-white mb-3 leading-tight">
-              Welcome back, {firstName}! 👋
+      {/* ─── GREETING HEADER ──────────────────────────────────────── */}
+      <section className="pt-1">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-[#6B7C7B] font-medium">{getGreeting()} 👋</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#1C2B2A] mt-0.5 leading-tight">
+              Hello, {firstName}!
             </h1>
-            <p className="text-white/80 mb-6 max-w-lg">
-              Your health companion for booking tests, consultations, and medicines — all in one place.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/user/book-test"
-                className="px-5 py-3 bg-white text-[#1FAF9A] rounded-xl font-semibold hover:shadow-xl transition-all flex items-center gap-2 text-sm"
-              >
-                <TestTube className="w-4 h-4" />
-                Book Test
-              </Link>
-              <Link
-                to="/user/book-doctor"
-                className="px-5 py-3 bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl font-medium hover:bg-white/25 transition-all flex items-center gap-2 text-sm"
-              >
-                <Stethoscope className="w-4 h-4" />
-                Book Doctor
-              </Link>
-              <Link
-                to="/user/pharmacy"
-                className="px-5 py-3 bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl font-medium hover:bg-white/25 transition-all flex items-center gap-2 text-sm"
-              >
-                <Pill className="w-4 h-4" />
-                Order Medicine
-              </Link>
-            </div>
+            <p className="text-sm text-[#6B7C7B] mt-1">How are you feeling today?</p>
           </div>
-          <div className="hidden lg:flex items-center justify-center">
-            <div className="relative">
-              <div className="w-48 h-48 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-sm">
-                <div className="text-7xl">🏥</div>
-              </div>
-              <div className="absolute -top-3 -right-3 bg-white rounded-xl p-3 shadow-lg">
-                <Heart className="w-6 h-6 text-red-400" />
-              </div>
-              <div className="absolute -bottom-3 -left-3 bg-white rounded-xl p-2.5 shadow-lg">
-                <div className="text-xs font-semibold text-[#1FAF9A]">500+</div>
-                <div className="text-[10px] text-[#6B7C7B]">Tests</div>
-              </div>
+          <div className="flex-shrink-0">
+            <div className="w-14 h-14 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] rounded-2xl flex items-center justify-center shadow-lg shadow-[#1FAF9A]/30">
+              <Heart className="w-6 h-6 text-white fill-white" />
             </div>
           </div>
         </div>
 
-        {/* Hero Search */}
-        <div className="relative z-10 mt-6 md:mt-8">
-          <SearchBar large placeholder="Search doctors, tests, medicines..." className="max-w-2xl" />
-        </div>
+        {/* Location pill */}
+        <button className="mt-3 flex items-center gap-1.5 text-xs text-[#6B7C7B] bg-white border border-[#E6F0EE] px-3 py-1.5 rounded-full hover:border-[#1FAF9A]/30 transition-colors md:hidden">
+          <MapPin className="w-3.5 h-3.5 text-[#1FAF9A]" />
+          <span>Delhi NCR</span>
+          <ChevronRight className="w-3 h-3" />
+        </button>
       </section>
 
-      {/* ─── QUICK ACTIONS ─────────────────────────────────────────── */}
+      {/* ─── HERO BANNER CAROUSEL ─────────────────────────────────── */}
       <section>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Link
-                key={action.label}
-                to={action.path}
-                className={`bg-gradient-to-br ${action.gradient} border border-[#E6F0EE] rounded-2xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group`}
-              >
-                <div className={`w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform`}>
-                  <span className="text-2xl">{action.emoji}</span>
-                </div>
-                <h3 className="font-semibold text-[#1C2B2A] text-sm">{action.label}</h3>
-                <div className="flex items-center gap-1 mt-1 text-xs text-[#6B7C7B] group-hover:text-[#1FAF9A] transition-colors">
-                  Explore <ChevronRight className="w-3 h-3" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ─── HEALTHCARE CATEGORIES ─────────────────────────────────── */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#1C2B2A]">Health Categories</h2>
-          <Link to="/user/book-test" className="text-sm text-[#1FAF9A] font-medium hover:text-[#0E7C6B] flex items-center gap-1">
-            View All <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-          {healthCategories.map((cat) => (
-            <Link
-              key={cat.id}
-              to={`/user/test-category/${cat.id}`}
-              className="flex-shrink-0 flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-[#E6F0EE] hover:shadow-lg hover:border-[#1FAF9A]/30 hover:-translate-y-1 transition-all duration-300 min-w-[100px]"
-            >
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: `${cat.color}15` }}>
-                {cat.icon}
-              </div>
-              <span className="text-xs font-medium text-[#1C2B2A] whitespace-nowrap">{cat.name}</span>
-              <span className="text-[10px] text-[#6B7C7B]">{cat.testCount} tests</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── FEATURED TEST PACKAGES ────────────────────────────────── */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#1C2B2A]">Featured Test Packages</h2>
-          <Link to="/user/book-test" className="text-sm text-[#1FAF9A] font-medium hover:text-[#0E7C6B] flex items-center gap-1">
-            View All <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {testPackages.slice(0, 3).map((test) => (
-            <TestCard key={test.id} test={test} />
-          ))}
-        </div>
-      </section>
-
-      {/* ─── TOP DOCTORS ───────────────────────────────────────────── */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#1C2B2A]">Top Doctors</h2>
-          <Link to="/user/book-doctor" className="text-sm text-[#1FAF9A] font-medium hover:text-[#0E7C6B] flex items-center gap-1">
-            View All <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {doctors.slice(0, 3).map((doc) => (
-            <DoctorCard key={doc.id} doctor={doc} />
-          ))}
-        </div>
-      </section>
-
-      {/* ─── PHARMACY PREVIEW ──────────────────────────────────────── */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#1C2B2A]">Pharmacy</h2>
-          <Link to="/user/pharmacy" className="text-sm text-[#1FAF9A] font-medium hover:text-[#0E7C6B] flex items-center gap-1">
-            View All <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-          {medicines.slice(0, 4).map((med) => (
-            <MedicineCard key={med.id} medicine={med} />
-          ))}
-        </div>
-      </section>
-
-      {/* ─── HEALTH BANNERS CAROUSEL ───────────────────────────────── */}
-      <section>
-        <div className="relative overflow-hidden rounded-2xl">
+        <div className="relative overflow-hidden rounded-3xl shadow-lg">
           <div
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${currentBanner * 100}%)` }}
@@ -234,19 +151,22 @@ export function UserHome() {
             {banners.map((banner) => (
               <div
                 key={banner.id}
-                className={`w-full flex-shrink-0 bg-gradient-to-r ${banner.gradient} rounded-2xl p-6 md:p-8`}
+                className={`w-full flex-shrink-0 bg-gradient-to-r ${banner.gradient} p-5 md:p-8`}
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-3xl mb-2">{banner.icon}</div>
-                    <h3 className="text-xl md:text-2xl font-bold text-white mb-2">{banner.title}</h3>
-                    <p className="text-white/80 text-sm mb-4">{banner.subtitle}</p>
+                  <div className="flex-1">
+                    <div className="text-3xl mb-3">{banner.icon}</div>
+                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1.5 leading-tight">{banner.title}</h2>
+                    <p className="text-white/80 text-sm mb-4 max-w-xs">{banner.subtitle}</p>
                     <Link
                       to="/user/book-test"
-                      className="inline-flex items-center gap-2 bg-white text-[#1C2B2A] px-5 py-2.5 rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
+                      className="inline-flex items-center gap-2 bg-white/95 text-[#1C2B2A] px-4 py-2.5 rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
                     >
-                      Book Now <ArrowRight className="w-4 h-4" />
+                      Book Now <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
+                  </div>
+                  <div className="hidden sm:flex w-20 h-20 bg-white/15 rounded-2xl items-center justify-center ml-4 backdrop-blur-sm">
+                    <span className="text-4xl">🏥</span>
                   </div>
                 </div>
               </div>
@@ -254,13 +174,15 @@ export function UserHome() {
           </div>
 
           {/* Dots */}
-          <div className="flex justify-center gap-2 mt-4">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
             {banners.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentBanner(i)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i === currentBanner ? "bg-[#1FAF9A] w-6" : "bg-[#E6F0EE]"
+                className={`rounded-full transition-all duration-300 ${
+                  i === currentBanner
+                    ? "bg-white w-5 h-1.5"
+                    : "bg-white/50 w-1.5 h-1.5"
                 }`}
               />
             ))}
@@ -268,51 +190,183 @@ export function UserHome() {
         </div>
       </section>
 
-      {/* ─── AI HEALTH ASSISTANT CARD ──────────────────────────────── */}
+      {/* ─── ACTIVE BOOKING CARD (Continue Journey) ─────────────── */}
+      {hasActiveBooking && (
+        <section>
+          <div className="bg-gradient-to-r from-[#1FAF9A]/8 to-[#0E7C6B]/5 border border-[#1FAF9A]/20 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                <Clock className="w-5 h-5 text-[#1FAF9A]" />
+              </div>
+              <div>
+                <p className="text-xs text-[#6B7C7B] font-medium uppercase tracking-wide">Continue Journey</p>
+                <h3 className="font-bold text-[#1C2B2A] text-sm mt-0.5">
+                  {latestBooking.testName || latestBooking.serviceType}
+                </h3>
+                <p className="text-xs text-[#1FAF9A] font-medium mt-0.5">
+                  {getStatusLabel(latestBooking.bookingStatus)}
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/user/tracking"
+              className="flex items-center gap-1.5 bg-[#1FAF9A] text-white px-4 py-2 rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-[#1FAF9A]/25 transition-all flex-shrink-0"
+            >
+              Track <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ─── QUICK ACTIONS ─────────────────────────────────────────── */}
       <section>
-        <div className="bg-gradient-to-br from-[#F4F8F7] to-white border border-[#E6F0EE] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#1FAF9A]/20">
-            <Bot className="w-8 h-8 text-white" />
-          </div>
-          <div className="flex-1 text-center md:text-left">
-            <h3 className="text-lg font-bold text-[#1C2B2A] mb-1">AI Health Assistant</h3>
-            <p className="text-sm text-[#6B7C7B]">
-              Need help finding the right test or doctor? Our AI assistant can guide you based on your symptoms.
-            </p>
-          </div>
-          <Link
-            to="/user/ai-assistant"
-            className="px-6 py-3 bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-[#1FAF9A]/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
-          >
-            <Bot className="w-4 h-4" />
-            Ask AI
-          </Link>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.label}
+                to={action.path}
+                className={`${action.bg} border ${action.border} rounded-2xl p-4 md:p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group active:scale-95`}
+              >
+                <div className={`w-11 h-11 ${action.iconBg} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-sm`}>
+                  <Icon className={`w-5 h-5 ${action.iconColor}`} />
+                </div>
+                <h3 className="font-bold text-[#1C2B2A] text-sm leading-tight">{action.label}</h3>
+                <p className="text-[10px] text-[#6B7C7B] mt-1 font-medium">{action.tag}</p>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
-      {/* ─── RECENT BOOKINGS ───────────────────────────────────────── */}
+      {/* ─── HEALTH CATEGORIES ─────────────────────────────────────── */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#1C2B2A]">Recent Bookings</h2>
-          <Link to="/user/tracking" className="text-sm text-[#1FAF9A] font-medium hover:text-[#0E7C6B] flex items-center gap-1">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-[#1C2B2A]">Health Categories</h2>
+          <Link to="/user/book-test" className="text-sm text-[#1FAF9A] font-semibold flex items-center gap-0.5">
+            All <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+          {healthCategories.map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/user/test-category/${cat.id}`}
+              className="flex-shrink-0 flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-[#E6F0EE] hover:shadow-md hover:border-[#1FAF9A]/30 hover:-translate-y-0.5 transition-all duration-300 min-w-[88px] active:scale-95"
+            >
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-xl"
+                style={{ background: `${cat.color}18` }}
+              >
+                {cat.icon}
+              </div>
+              <span className="text-[11px] font-semibold text-[#1C2B2A] text-center leading-tight whitespace-nowrap">{cat.name}</span>
+              <span className="text-[10px] text-[#6B7C7B]">{cat.testCount}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── POPULAR TESTS ──────────────────────────────────────────── */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-[#1C2B2A]">Popular Tests</h2>
+          <Link to="/user/book-test" className="text-sm text-[#1FAF9A] font-semibold flex items-center gap-0.5">
+            View All <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+        {/* Horizontal swipe on mobile, grid on desktop */}
+        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:pb-0">
+          {testPackages.slice(0, 5).map((test) => (
+            <div key={test.id} className="flex-shrink-0 w-64 md:w-auto">
+              <TestCard test={test} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── TOP DOCTORS ────────────────────────────────────────────── */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-[#1C2B2A]">Top Doctors</h2>
+          <Link to="/user/book-doctor" className="text-sm text-[#1FAF9A] font-semibold flex items-center gap-0.5">
+            View All <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:pb-0">
+          {doctors.slice(0, 4).map((doc) => (
+            <div key={doc.id} className="flex-shrink-0 w-64 md:w-auto">
+              <DoctorCard doctor={doc} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── PHARMACY QUICK ─────────────────────────────────────────── */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-[#1C2B2A]">Pharmacy</h2>
+          <Link to="/user/pharmacy" className="text-sm text-[#1FAF9A] font-semibold flex items-center gap-0.5">
+            View All <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+          {medicines.slice(0, 6).map((med) => (
+            <Link
+              key={med.id}
+              to="/user/pharmacy"
+              className="flex-shrink-0 bg-white border border-[#E6F0EE] rounded-2xl p-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 w-36 active:scale-95"
+            >
+              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mb-2 text-xl">
+                💊
+              </div>
+              <h3 className="font-semibold text-[#1C2B2A] text-xs leading-tight line-clamp-2">{med.name}</h3>
+              <p className="text-[10px] text-[#6B7C7B] mt-0.5">{med.category}</p>
+              <p className="text-sm font-bold text-[#1FAF9A] mt-1.5">₹{med.price}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── RECENT BOOKINGS ──────────────────────────────────────── */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-[#1C2B2A]">Recent Bookings</h2>
+          <Link to="/user/tracking" className="text-sm text-[#1FAF9A] font-semibold flex items-center gap-0.5">
             View All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
         <div className="space-y-3">
           {recentBookings.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-[#E6F0EE] p-6 text-center text-sm text-[#6B7C7B]">
-              No recent bookings found.
+            <div className="bg-white rounded-2xl border border-[#E6F0EE] p-8 text-center">
+              <div className="text-4xl mb-3">📋</div>
+              <p className="font-semibold text-[#1C2B2A] text-sm mb-1">No bookings yet</p>
+              <p className="text-xs text-[#6B7C7B] mb-4">Start by booking a lab test or doctor consultation</p>
+              <Link
+                to="/user/book-test"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-[#1FAF9A]/25 transition-all"
+              >
+                <TestTube className="w-4 h-4" /> Book Now
+              </Link>
             </div>
           ) : (
             recentBookings.map((booking) => (
-              <div
+              <Link
                 key={booking.bookingId}
-                className="bg-white rounded-2xl border border-[#E6F0EE] p-4 flex items-center justify-between hover:shadow-md transition-shadow"
+                to="/user/tracking"
+                className="bg-white rounded-2xl border border-[#E6F0EE] p-4 flex items-center justify-between hover:shadow-md hover:border-[#1FAF9A]/20 transition-all active:scale-[0.99]"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    booking.serviceType === "test" ? "bg-[#1FAF9A]/10" : booking.serviceType === "doctor" ? "bg-blue-50" : "bg-purple-50"
-                  }`}>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      booking.serviceType === "test"
+                        ? "bg-[#1FAF9A]/10"
+                        : booking.serviceType === "doctor"
+                        ? "bg-blue-50"
+                        : "bg-purple-50"
+                    }`}
+                  >
                     {booking.serviceType === "test" ? (
                       <TestTube className="w-5 h-5 text-[#1FAF9A]" />
                     ) : booking.serviceType === "doctor" ? (
@@ -322,82 +376,116 @@ export function UserHome() {
                     )}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[#1C2B2A] text-sm">{booking.testName || booking.serviceType}</h3>
-                    <p className="text-xs text-[#6B7C7B]">{new Date(booking.createdAt).toLocaleDateString()}</p>
+                    <h3 className="font-semibold text-[#1C2B2A] text-sm">
+                      {booking.testName || booking.serviceType}
+                    </h3>
+                    <p className="text-xs text-[#6B7C7B]">
+                      {new Date(booking.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <StatusBadge status={getStatusLabel(booking.bookingStatus)} />
-                  <Link
-                    to="/user/tracking"
-                    className="hidden sm:flex items-center gap-1 px-3 py-1.5 border border-[#E6F0EE] rounded-lg text-xs text-[#1FAF9A] font-medium hover:border-[#1FAF9A] transition-colors"
-                  >
-                    Track <ChevronRight className="w-3 h-3" />
-                  </Link>
+                  <ChevronRight className="w-4 h-4 text-[#6B7C7B]" />
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
       </section>
 
-      {/* ─── HEALTH TIMELINE PREVIEW ───────────────────────────────── */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#1C2B2A]">Health Trends</h2>
-          <Link to="/user/reports" className="text-sm text-[#1FAF9A] font-medium hover:text-[#0E7C6B] flex items-center gap-1">
+      {/* ─── AI HEALTH ASSISTANT CARD ───────────────────────────────── */}
+      <section className="pb-4">
+        <div className="bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] rounded-3xl p-6 relative overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-10 w-20 h-20 bg-white/5 rounded-full translate-y-1/2" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">AI Health Assistant</h3>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse" />
+                  <span className="text-xs text-white/80 font-medium">Available 24/7</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-white/80 text-sm mb-5 leading-relaxed">
+              Describe your symptoms and get instant guidance on which tests or doctors you need.
+            </p>
+            <Link
+              to="/user/ai-assistant"
+              className="flex items-center justify-center gap-2 bg-white text-[#1FAF9A] py-3 px-6 rounded-2xl font-bold text-sm hover:shadow-xl transition-all active:scale-95"
+            >
+              <Zap className="w-4 h-4" />
+              Ask AI Assistant
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── HEALTH PACKAGES PROMO ──────────────────────────────────── */}
+      <section className="pb-2">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-[#1C2B2A]">Health Packages</h2>
+          <Link to="/user/book-test" className="text-sm text-[#1FAF9A] font-semibold flex items-center gap-0.5">
             View All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {healthTimelines.map((timeline) => {
-            const latestValue = timeline.data[timeline.data.length - 1].value;
-            const isNormal = latestValue >= timeline.normal.min && latestValue <= timeline.normal.max;
-            const trend = timeline.data[timeline.data.length - 1].value - timeline.data[timeline.data.length - 2].value;
-            return (
-              <div key={timeline.metric} className="bg-white rounded-2xl border border-[#E6F0EE] p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-[#1C2B2A] text-sm">{timeline.metric}</h3>
-                    <p className="text-xs text-[#6B7C7B]">Normal: {timeline.normal.min}-{timeline.normal.max} {timeline.unit}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className={`text-xl font-bold ${isNormal ? "text-[#1FAF9A]" : "text-amber-500"}`}>
-                      {latestValue}
-                    </div>
-                    <div className={`text-xs flex items-center gap-0.5 ${trend > 0 ? "text-red-400" : "text-green-500"}`}>
-                      <TrendingUp className={`w-3 h-3 ${trend < 0 ? "rotate-180" : ""}`} />
-                      {Math.abs(trend).toFixed(1)} {timeline.unit}
-                    </div>
-                  </div>
+        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+          {[
+            { name: "Full Body Checkup", tests: "72 tests", price: "₹1,999", original: "₹5,400", discount: "63% off", emoji: "🩺", bg: "from-[#1FAF9A]/10 to-[#0E7C6B]/5", border: "border-[#1FAF9A]/20" },
+            { name: "Diabetes Panel", tests: "12 tests", price: "₹649", original: "₹1,200", discount: "46% off", emoji: "🩸", bg: "from-red-50 to-orange-50/50", border: "border-red-100" },
+            { name: "Heart Health", tests: "18 tests", price: "₹899", original: "₹2,100", discount: "57% off", emoji: "❤️", bg: "from-pink-50 to-rose-50/50", border: "border-pink-100" },
+            { name: "Thyroid Profile", tests: "6 tests", price: "₹399", original: "₹850", discount: "53% off", emoji: "🦋", bg: "from-purple-50 to-indigo-50/50", border: "border-purple-100" },
+          ].map((pkg) => (
+            <Link
+              key={pkg.name}
+              to="/user/book-test"
+              className={`flex-shrink-0 bg-gradient-to-br ${pkg.bg} border ${pkg.border} rounded-2xl p-4 w-52 hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95`}
+            >
+              <div className="text-2xl mb-2">{pkg.emoji}</div>
+              <h3 className="font-bold text-[#1C2B2A] text-sm leading-tight">{pkg.name}</h3>
+              <p className="text-[10px] text-[#6B7C7B] mt-0.5 mb-2">{pkg.tests}</p>
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-base font-bold text-[#1C2B2A]">{pkg.price}</p>
+                  <p className="text-[10px] text-[#6B7C7B] line-through">{pkg.original}</p>
                 </div>
-
-                {/* Mini chart */}
-                <div className="flex items-end gap-1.5 h-16">
-                  {timeline.data.map((point, i) => {
-                    const maxVal = Math.max(...timeline.data.map((d) => d.value));
-                    const minVal = Math.min(...timeline.data.map((d) => d.value));
-                    const range = maxVal - minVal || 1;
-                    const height = ((point.value - minVal) / range) * 100;
-                    const pointNormal = point.value >= timeline.normal.min && point.value <= timeline.normal.max;
-                    return (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                        <div
-                          className={`w-full rounded-lg transition-all ${pointNormal ? "bg-[#1FAF9A]/20" : "bg-amber-100"}`}
-                          style={{ height: `${Math.max(height, 15)}%` }}
-                        >
-                          <div
-                            className={`w-full h-full rounded-lg ${pointNormal ? "bg-gradient-to-t from-[#1FAF9A] to-[#1FAF9A]/60" : "bg-gradient-to-t from-amber-400 to-amber-200"}`}
-                          />
-                        </div>
-                        <span className="text-[9px] text-[#6B7C7B]">{point.date}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <span className="text-[10px] font-bold text-[#1FAF9A] bg-[#1FAF9A]/10 px-2 py-0.5 rounded-lg">
+                  {pkg.discount}
+                </span>
               </div>
-            );
-          })}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── SAFETY & TRUST STRIP ───────────────────────────────────── */}
+      <section className="pb-2">
+        <div className="bg-white border border-[#E6F0EE] rounded-2xl p-4">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            {[
+              { icon: Shield, label: "NABL Certified", sub: "Lab Standards" },
+              { icon: Package, label: "Home Collection", sub: "Free Service" },
+              { icon: TrendingUp, label: "2M+ Reports", sub: "Delivered" },
+            ].map(({ icon: Icon, label, sub }) => (
+              <div key={label} className="flex flex-col items-center gap-1.5">
+                <div className="w-10 h-10 bg-[#1FAF9A]/8 rounded-xl flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-[#1FAF9A]" />
+                </div>
+                <p className="text-xs font-bold text-[#1C2B2A] leading-tight">{label}</p>
+                <p className="text-[10px] text-[#6B7C7B]">{sub}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </div>
