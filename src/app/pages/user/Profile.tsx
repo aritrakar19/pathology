@@ -20,6 +20,7 @@ import {
   Bell,
   HelpCircle,
   LogOut,
+  Stethoscope,
 } from "lucide-react";
 import { useUserProfile } from "../../context/ProfileContext";
 import { signOut } from "firebase/auth";
@@ -99,7 +100,8 @@ export function Profile() {
       title: "Health",
       items: [
         { icon: FileText, label: "My Reports", sub: "View all test reports", path: "/user/reports", color: "text-[#1FAF9A]", bg: "bg-[#1FAF9A]/10" },
-        { icon: Heart, label: "Bookings", sub: "Track your appointments", path: "/user/tracking", color: "text-blue-500", bg: "bg-blue-50" },
+        { icon: Heart, label: "Lab Bookings", sub: "Track test orders", path: "/user/tracking", color: "text-blue-500", bg: "bg-blue-50" },
+        { icon: Stethoscope, label: "My Appointments", sub: "Doctor appointments", path: "/user/my-appointments", color: "text-purple-500", bg: "bg-purple-50" },
       ],
     },
     {

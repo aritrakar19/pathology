@@ -22,10 +22,10 @@ import { StatusBadge } from "../../components/user/StatusBadge";
 import {
   healthCategories,
   testPackages,
-  doctors,
   medicines,
   banners,
 } from "../../data/mockData";
+import { Doctor, DoctorService } from "../../services/DoctorService";
 import { useUserProfile } from "../../context/ProfileContext";
 import { Booking, BookingService } from "../../services/BookingService";
 
@@ -43,6 +43,8 @@ const getGreeting = () => {
 export function UserHome() {
   const [currentBanner, setCurrentBanner] = useState(0);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [topDoctors, setTopDoctors] = useState<Doctor[]>([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
   const { profile } = useUserProfile();
   const firstName = profile?.fullName ? profile.fullName.split(" ")[0] : "User";
 
@@ -54,6 +56,15 @@ export function UserHome() {
       return () => unsubscribe();
     }
   }, [profile]);
+
+  // Subscribe to top active doctors (realtime)
+  useEffect(() => {
+    const unsubscribe = DoctorService.subscribeToActiveDoctors((data) => {
+      setTopDoctors(data);
+      setDoctorsLoading(false);
+    }, 8);
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -291,16 +302,60 @@ export function UserHome() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold text-[#1C2B2A]">Top Doctors</h2>
           <Link to="/user/book-doctor" className="text-sm text-[#1FAF9A] font-semibold flex items-center gap-0.5">
-            View All <ChevronRight className="w-4 h-4" />
+            See All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:pb-0">
-          {doctors.slice(0, 4).map((doc) => (
-            <div key={doc.id} className="flex-shrink-0 w-64 md:w-auto">
-              <DoctorCard doctor={doc} />
-            </div>
-          ))}
-        </div>
+
+        {doctorsLoading ? (
+          /* ── SKELETON LOADING ── */
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="flex-shrink-0 w-64 md:w-auto bg-white rounded-2xl border border-[#E6F0EE] p-5 animate-pulse">
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-[#E6F0EE] flex-shrink-0" />
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="h-4 bg-[#E6F0EE] rounded-lg w-3/4" />
+                    <div className="h-3 bg-[#E6F0EE] rounded-lg w-1/2" />
+                    <div className="h-3 bg-[#E6F0EE] rounded-lg w-2/3" />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <div className="h-3 bg-[#E6F0EE] rounded-lg w-16" />
+                  <div className="h-3 bg-[#E6F0EE] rounded-lg w-16" />
+                </div>
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-[#E6F0EE]">
+                  <div className="h-5 bg-[#E6F0EE] rounded-lg w-14" />
+                  <div className="flex gap-2">
+                    <div className="h-8 w-14 bg-[#E6F0EE] rounded-xl" />
+                    <div className="h-8 w-14 bg-[#1FAF9A]/20 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : topDoctors.length === 0 ? (
+          /* ── EMPTY STATE ── */
+          <div className="bg-white rounded-2xl border border-[#E6F0EE] p-8 text-center">
+            <div className="text-4xl mb-3">👨‍⚕️</div>
+            <p className="font-semibold text-[#1C2B2A] text-sm mb-1">No doctors available right now</p>
+            <p className="text-xs text-[#6B7C7B] mb-4">Check back soon or browse all doctors</p>
+            <Link
+              to="/user/book-doctor"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-[#1FAF9A]/25 transition-all"
+            >
+              <Stethoscope className="w-4 h-4" /> Browse Doctors
+            </Link>
+          </div>
+        ) : (
+          /* ── REAL DOCTOR CARDS ── */
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:pb-0">
+            {topDoctors.map((doc) => (
+              <div key={doc.doctorId} className="flex-shrink-0 w-64 md:w-auto">
+                <DoctorCard doctor={doc} />
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ─── PHARMACY QUICK ─────────────────────────────────────────── */}
