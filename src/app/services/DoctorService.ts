@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, getDoc, query, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDocs, getDoc, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase";
 
 export interface Doctor {
@@ -10,6 +10,7 @@ export interface Doctor {
   reviewCount: number;
   fee: number;
   available: boolean;
+  active?: boolean; // some admin panels store as 'active'
   nextSlot: string;
   image: string;
   hospital: string;
@@ -23,14 +24,35 @@ export class DoctorService {
   static async getDoctors(): Promise<Doctor[]> {
     const q = query(collection(db, COLLECTION));
     const snap = await getDocs(q);
-    return snap.docs.map(doc => doc.data() as Doctor);
+    return snap.docs.map(d => ({ ...d.data(), doctorId: d.data().doctorId || d.id } as Doctor));
+  }
+
+  /** Returns only doctors where available===true OR active===true */
+  static async getActiveDoctors(limit = 8): Promise<Doctor[]> {
+    const snap = await getDocs(query(collection(db, COLLECTION)));
+    const all = snap.docs.map(d => ({ ...d.data(), doctorId: d.data().doctorId || d.id } as Doctor));
+    return all
+      .filter(d => d.available === true || d.active === true)
+      .slice(0, limit);
   }
 
   static subscribeToDoctors(callback: (doctors: Doctor[]) => void) {
     const q = query(collection(db, COLLECTION));
     return onSnapshot(q, (snap) => {
-      const doctors = snap.docs.map(doc => doc.data() as Doctor);
+      const doctors = snap.docs.map(d => ({ ...d.data(), doctorId: d.data().doctorId || d.id } as Doctor));
       callback(doctors);
+    });
+  }
+
+  /** Realtime subscription to active doctors only (up to `limit`) */
+  static subscribeToActiveDoctors(callback: (doctors: Doctor[]) => void, limit = 8) {
+    const q = query(collection(db, COLLECTION));
+    return onSnapshot(q, (snap) => {
+      const all = snap.docs.map(d => ({ ...d.data(), doctorId: d.data().doctorId || d.id } as Doctor));
+      const active = all
+        .filter(d => d.available === true || d.active === true)
+        .slice(0, limit);
+      callback(active);
     });
   }
 

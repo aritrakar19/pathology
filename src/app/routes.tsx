@@ -75,6 +75,12 @@ import { ReportDetails } from "./pages/user/ReportDetails";
 import { TestCategory } from "./pages/user/TestCategory";
 import React from "react";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { DoctorPatientDetails } from "./pages/user/DoctorPatientDetails";
+import { DoctorPayment } from "./pages/user/DoctorPayment";
+import { AppointmentSuccess } from "./pages/user/AppointmentSuccess";
+import { AppointmentTracking } from "./pages/user/AppointmentTracking";
+import { MyAppointments } from "./pages/user/MyAppointments";
+import { DoctorBookingProvider } from "./context/DoctorBookingContext";
 
 export const router = createBrowserRouter([
   {
@@ -124,7 +130,9 @@ export const router = createBrowserRouter([
         <ProfileProvider>
           <BookingProvider>
             <CartProvider>
-              <UserLayout />
+              <DoctorBookingProvider>
+                <UserLayout />
+              </DoctorBookingProvider>
             </CartProvider>
           </BookingProvider>
         </ProfileProvider>
@@ -151,6 +159,11 @@ export const router = createBrowserRouter([
       { path: "patient-details", element: <PatientDetails /> },
       { path: "payment", element: <Payment /> },
       { path: "booking-success", element: <BookingSuccess /> },
+      { path: "appointment-success", element: <AppointmentSuccess /> },
+      { path: "track-appointment", element: <AppointmentTracking /> },
+      { path: "my-appointments", element: <MyAppointments /> },
+      { path: "doctor-patient-details", element: <DoctorPatientDetails /> },
+      { path: "doctor-payment", element: <DoctorPayment /> },
       { path: "ai-assistant", element: <AIAssistant /> },
       { path: "profile", element: <Profile /> },
       { path: "settings", element: <UserSettings /> },

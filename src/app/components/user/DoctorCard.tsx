@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import { Star, Clock, MapPin } from "lucide-react";
-import type { Doctor } from "../../data/mockData";
+import type { Doctor } from "../../services/DoctorService";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 
 interface DoctorCardProps {
@@ -59,13 +59,13 @@ export function DoctorCard({ doctor, compact = false }: DoctorCardProps) {
         </div>
         <div className="flex gap-2">
           <Link
-            to={`/user/doctor-profile/${doctor.id}`}
+            to={`/user/doctor-profile/${doctor.doctorId}`}
             className="px-3 py-2 border border-[#E6F0EE] text-[#1FAF9A] rounded-xl text-xs font-medium hover:border-[#1FAF9A] hover:bg-[#F4F8F7] transition-all"
           >
             View
           </Link>
           <Link
-            to={`/user/doctor-profile/${doctor.id}`}
+            to={`/user/doctor-profile/${doctor.doctorId}`}
             className="px-4 py-2 bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white rounded-xl text-xs font-semibold hover:shadow-lg hover:shadow-[#1FAF9A]/25 transition-all"
           >
             Book
