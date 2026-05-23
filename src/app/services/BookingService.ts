@@ -61,22 +61,21 @@ export class BookingService {
   static async getUserBookings(userId: string): Promise<Booking[]> {
     const q = query(
       collection(db, COLLECTION),
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc")
+      where("userId", "==", userId)
     );
     const snap = await getDocs(q);
-    return snap.docs.map(doc => doc.data() as Booking);
+    const bookings = snap.docs.map(doc => doc.data() as Booking);
+    return bookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   static subscribeToUserBookings(userId: string, callback: (bookings: Booking[]) => void) {
     const q = query(
       collection(db, COLLECTION),
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc")
+      where("userId", "==", userId)
     );
     return onSnapshot(q, (snap) => {
       const bookings = snap.docs.map(doc => doc.data() as Booking);
-      callback(bookings);
+      callback(bookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     });
   }
 
@@ -111,10 +110,10 @@ export class BookingService {
   }
 
   static subscribeToAllBookings(callback: (bookings: Booking[]) => void) {
-    const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
+    const q = query(collection(db, COLLECTION));
     return onSnapshot(q, (snap) => {
       const bookings = snap.docs.map(doc => doc.data() as Booking);
-      callback(bookings);
+      callback(bookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     });
   }
 }

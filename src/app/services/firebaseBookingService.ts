@@ -172,22 +172,22 @@ export async function updateBookingStatus(
 export async function getBookingsByTenant(tenantId: string): Promise<BookingRecord[]> {
   const q = query(
     collection(db, BOOKINGS_COLLECTION),
-    where("tenant_id", "==", tenantId),
-    orderBy("created_at", "desc"),
+    where("tenant_id", "==", tenantId)
   );
   const snap = await getDocs(q);
-  return fromSnapshot(snap);
+  const bookings = fromSnapshot(snap);
+  return bookings.sort((a, b) => (b.created_at?.getTime() ?? 0) - (a.created_at?.getTime() ?? 0));
 }
 
 export async function getUserBookings(tenantId: string, patientId: string): Promise<BookingRecord[]> {
   const q = query(
     collection(db, BOOKINGS_COLLECTION),
     where("tenant_id", "==", tenantId),
-    where("patient_id", "==", patientId),
-    orderBy("created_at", "desc"),
+    where("patient_id", "==", patientId)
   );
   const snap = await getDocs(q);
-  return fromSnapshot(snap);
+  const bookings = fromSnapshot(snap);
+  return bookings.sort((a, b) => (b.created_at?.getTime() ?? 0) - (a.created_at?.getTime() ?? 0));
 }
 
 export function subscribeBookingUpdates(params: {
@@ -208,13 +208,15 @@ export function subscribeBookingUpdates(params: {
 
   const q = query(
     collection(db, BOOKINGS_COLLECTION),
-    ...filters,
-    orderBy("created_at", "desc"),
+    ...filters
   );
 
   return onSnapshot(
     q,
-    (snap) => onChange(fromSnapshot(snap)),
+    (snap) => {
+      const bookings = fromSnapshot(snap);
+      onChange(bookings.sort((a, b) => (b.created_at?.getTime() ?? 0) - (a.created_at?.getTime() ?? 0)));
+    },
     (err) => {
       console.error("Booking updates error", err);
       onError?.(err);

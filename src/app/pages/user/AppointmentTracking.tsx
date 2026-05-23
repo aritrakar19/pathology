@@ -7,7 +7,10 @@ import {
   Loader2,
   Calendar,
   Clock,
-  ChevronRight,
+  Download,
+  XCircle,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import {
   Appointment,
@@ -16,6 +19,20 @@ import {
 } from "../../services/AppointmentService";
 import { useUserProfile } from "../../context/ProfileContext";
 import { ImageWithFallback } from "../../components/figma/ImageWithFallback";
+import { toast } from "sonner";
+
+function generateAndDownloadInvoice(appt: Appointment) {
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Invoice</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:600px;margin:0 auto}.header{background:linear-gradient(135deg,#1FAF9A,#0E7C6B);color:white;padding:28px;border-radius:16px;margin-bottom:24px}.section{background:#F4F8F7;border-radius:12px;padding:20px;margin-bottom:16px}.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E6F0EE;font-size:13px}.row:last-child{border-bottom:none}.label{color:#6B7C7B}.value{font-weight:600}.footer{text-align:center;font-size:12px;color:#9BB5B3;margin-top:24px}</style></head><body><div class="header"><h1>MediPath Health Centre</h1><p>Invoice ${appt.humanReadableId || "#" + appt.appointmentId.slice(0,8)}</p></div><div class="section"><div class="row"><span class="label">Doctor</span><span class="value">${appt.doctorName}</span></div><div class="row"><span class="label">Date</span><span class="value">${appt.appointmentDate}</span></div><div class="row"><span class="label">Time</span><span class="value">${appt.appointmentTime}</span></div></div><div class="section"><div class="row"><span class="label">Patient</span><span class="value">${appt.patientName}</span></div><div class="row"><span class="label">Fee</span><span class="value">\u20b9${appt.consultationFee}</span></div><div class="row"><span class="label">Payment</span><span class="value">${appt.paymentStatus === "cash" ? "Cash at Clinic" : appt.paymentStatus}</span></div></div><div class="footer">Thank you for choosing MediPath! support@medipath.com</div></body></html>`;
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Invoice_${appt.humanReadableId || appt.appointmentId.slice(0,8)}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 const TIMELINE_STEPS: {
   key: AppointmentStatus;
@@ -23,6 +40,18 @@ const TIMELINE_STEPS: {
   desc: string;
   icon: string;
 }[] = [
+  {
+    key: "pending",
+    label: "Pending",
+    desc: "Your booking is pending approval",
+    icon: "⏳",
+  },
+  {
+    key: "approved",
+    label: "Approved",
+    desc: "Your booking has been approved",
+    icon: "👍",
+  },
   {
     key: "appointment_confirmed",
     label: "Appointment Confirmed",
@@ -56,6 +85,9 @@ const TIMELINE_STEPS: {
 ];
 
 const STATUS_COLORS: Record<AppointmentStatus, string> = {
+  pending: "bg-gray-100 text-gray-700",
+  approved: "bg-emerald-100 text-emerald-700",
+  rejected: "bg-red-100 text-red-700",
   appointment_confirmed: "bg-blue-100 text-blue-700",
   reminder_sent: "bg-amber-100 text-amber-700",
   checked_in: "bg-purple-100 text-purple-700",
@@ -73,6 +105,22 @@ export function AppointmentTracking() {
 
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancelConfirm = async () => {
+    if (!appointment) return;
+    setIsCancelling(true);
+    try {
+      await AppointmentService.cancelAppointment(appointment.appointmentId);
+      toast.success("Appointment cancelled.");
+      setShowCancelConfirm(false);
+    } catch {
+      toast.error("Failed to cancel. Try again.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   useEffect(() => {
     if (!appointmentId) {
@@ -155,18 +203,31 @@ export function AppointmentTracking() {
           </div>
         </div>
 
-        {/* ID & fee */}
-        <div className="mt-4 pt-4 border-t border-[#E6F0EE] flex justify-between text-xs text-[#6B7C7B]">
-          <span>
-            ID:{" "}
-            <span className="font-bold text-[#1C2B2A]">
-              #{appointment.appointmentId.substring(0, 10)}
-            </span>
-          </span>
-          <span>
-            Fee:{" "}
-            <span className="font-bold text-[#1FAF9A]">₹{appointment.consultationFee}</span>
-          </span>
+        {/* ID, fee, and actions */}
+        <div className="mt-4 pt-4 border-t border-[#E6F0EE] space-y-3">
+          <div className="flex justify-between text-xs text-[#6B7C7B]">
+            <span>ID <span className="font-bold text-[#1C2B2A]">{appointment.humanReadableId || "#" + appointment.appointmentId.substring(0, 10)}</span></span>
+            <span>Fee <span className="font-bold text-[#1FAF9A]">₹{appointment.consultationFee}</span></span>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => generateAndDownloadInvoice(appointment)}
+              className="flex-1 py-2.5 text-xs font-semibold bg-[#F4F8F7] text-[#6B7C7B] rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#E6F0EE] transition-all"
+            >
+              <Download className="w-3.5 h-3.5" /> Invoice
+            </button>
+            {!['completed','cancelled'].includes(appointment.appointmentStatus) && (
+              <button
+                onClick={() => setShowCancelConfirm(true)}
+                disabled={isCancelling}
+                className="flex-1 py-2.5 text-xs font-semibold bg-red-50 text-red-500 rounded-xl flex items-center justify-center gap-1.5 hover:bg-red-100 transition-all"
+              >
+                <XCircle className="w-3.5 h-3.5" /> Cancel Appt
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -178,11 +239,17 @@ export function AppointmentTracking() {
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
         </h2>
 
-        {appointment.appointmentStatus === "cancelled" ? (
+        {['cancelled', 'rejected'].includes(appointment.appointmentStatus) ? (
           <div className="text-center py-8">
             <p className="text-4xl mb-3">❌</p>
-            <p className="font-bold text-red-500">Appointment Cancelled</p>
-            <p className="text-sm text-[#6B7C7B] mt-1">This appointment was cancelled.</p>
+            <p className="font-bold text-red-500">
+              {appointment.appointmentStatus === "cancelled" ? "Appointment Cancelled" : "Appointment Rejected"}
+            </p>
+            <p className="text-sm text-[#6B7C7B] mt-1">
+              {appointment.appointmentStatus === "cancelled" 
+                ? "This appointment was cancelled." 
+                : "This appointment request was rejected."}
+            </p>
           </div>
         ) : (
           <div className="space-y-0">
