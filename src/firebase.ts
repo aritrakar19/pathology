@@ -37,6 +37,13 @@ provider.setCustomParameters({ prompt: "select_account" });
 
 export type UserRole = "admin" | "doctor" | "patient" | "user";
 
+const VALID_ROLES: UserRole[] = ["admin", "doctor", "patient", "user"];
+
+export function normalizeUserRole(role: string | null | undefined): UserRole {
+  const normalized = role?.toLowerCase().trim() as UserRole | undefined;
+  return normalized && VALID_ROLES.includes(normalized) ? normalized : "user";
+}
+
 export interface AppUser {
   uid: string;
   name: string | null;
@@ -59,7 +66,8 @@ export async function getUserRole(uid: string): Promise<UserRole | null> {
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   const data = snap.data() as Partial<AppUser>;
-  return (data.role as UserRole | undefined) ?? null;
+  const role = (data.role as string | undefined) ?? null;
+  return role ? normalizeUserRole(role) : null;
 }
 
 export async function saveUserWithRole(user: User, role: UserRole, phone?: string): Promise<void> {

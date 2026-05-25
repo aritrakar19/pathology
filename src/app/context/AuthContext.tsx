@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth, getUserRole, UserRole } from "../../firebase";
+import { auth, getUserRole, normalizeUserRole, UserRole } from "../../firebase";
 import { Loader2 } from "lucide-react";
 
 interface AuthContextType {
@@ -27,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(currentUser);
       if (currentUser) {
         const userRole = await getUserRole(currentUser.uid);
-        setRole(userRole || "user");
+        setRole(normalizeUserRole(userRole));
       } else {
         setRole(null);
       }

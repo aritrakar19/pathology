@@ -2,7 +2,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router";
 import { Activity, Eye, EyeOff } from "lucide-react";
-import { signInWithGooglePopup, getUserRole, saveUserWithRole, auth, type UserRole } from "../../firebase";
+import { signInWithGooglePopup, getUserRole, saveUserWithRole, auth, normalizeUserRole, type UserRole } from "../../firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
@@ -46,11 +46,7 @@ export function LoginPage() {
       const cred = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const userObj = cred.user;
       const userRole = await getUserRole(userObj.uid);
-      if (userRole) {
-        redirectByRole(userRole);
-      } else {
-        navigate("/user/home");
-      }
+      redirectByRole(normalizeUserRole(userRole));
       toast.success("Logged in successfully");
     } catch (err: any) {
       console.error("Email login failed", err);
@@ -77,7 +73,7 @@ export function LoginPage() {
 
       const existingRole = await getUserRole(userObj.uid);
       if (existingRole) {
-        redirectByRole(existingRole);
+        redirectByRole(normalizeUserRole(existingRole));
       } else {
         // Save as default 'user' if it's a new user signing in via Google
         await saveUserWithRole(userObj as any, "user");
