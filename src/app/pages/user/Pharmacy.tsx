@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { SearchBar } from "../../components/user/SearchBar";
 import { MedicineCard } from "../../components/user/MedicineCard";
 import { Medicine, PharmacyService } from "../../services/PharmacyService";
-import { ShoppingCart, Loader2 } from "lucide-react";
+import { ShoppingCart, Loader2, History } from "lucide-react";
 import { Link } from "react-router";
 import { useCart } from "../../context/CartContext";
+import { PrescriptionUpload } from "../../components/user/PrescriptionUpload";
+import { PrescriptionResults } from "../../components/user/PrescriptionResults";
+import { PrescriptionScan } from "../../services/PrescriptionService";
 
 const categories = ["All", "Pain Relief", "Antibiotics", "Gastro", "Supplements", "Diabetes"];
 
@@ -13,6 +16,8 @@ export function Pharmacy() {
   const [query, setQuery] = useState("");
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentScan, setCurrentScan] = useState<PrescriptionScan | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
   const { cartItems } = useCart();
   const cartCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
@@ -31,7 +36,7 @@ export function Pharmacy() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1C2B2A]">Pharmacy</h1>
@@ -39,7 +44,10 @@ export function Pharmacy() {
         </div>
         <div className="flex items-center gap-3">
           <SearchBar placeholder="Search medicines..." onSearch={setQuery} className="max-w-sm w-full" />
-          <Link to="/user/cart" className="relative p-3 bg-white border border-[#E6F0EE] rounded-xl hover:border-[#1FAF9A] transition-colors">
+          <Link to="/user/prescription-history" className="relative p-3 bg-white border border-[#E6F0EE] rounded-xl hover:border-[#1FAF9A] transition-colors" title="Prescription History">
+            <History className="w-5 h-5 text-[#6B7C7B]" />
+          </Link>
+          <Link to="/user/cart" className="relative p-3 bg-white border border-[#E6F0EE] rounded-xl hover:border-[#1FAF9A] transition-colors" title="Cart">
             <ShoppingCart className="w-5 h-5 text-[#6B7C7B]" />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#1FAF9A] text-white rounded-full text-[10px] flex items-center justify-center font-bold">
@@ -58,14 +66,37 @@ export function Pharmacy() {
         ))}
       </div>
 
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-2xl p-5 flex items-center gap-4">
-        <span className="text-3xl">💊</span>
-        <div>
-          <h3 className="font-semibold text-[#1C2B2A] text-sm">Upload Prescription</h3>
-          <p className="text-xs text-[#6B7C7B]">Get medicines delivered with a valid prescription</p>
+      {currentScan ? (
+        <div className="mb-8">
+          <PrescriptionResults 
+            scan={currentScan} 
+            availableMedicines={medicines}
+            onReset={() => {
+              setCurrentScan(null);
+              setShowUpload(true);
+            }} 
+          />
         </div>
-        <button className="ml-auto px-4 py-2 bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white rounded-xl text-xs font-semibold hover:shadow-lg transition-all">Upload</button>
-      </div>
+      ) : showUpload ? (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-[#1C2B2A]">Upload Prescription</h2>
+            <button onClick={() => setShowUpload(false)} className="text-sm font-medium text-[#6B7C7B] hover:text-[#1FAF9A]">
+              Cancel
+            </button>
+          </div>
+          <PrescriptionUpload onUploadSuccess={(scan) => setCurrentScan(scan)} />
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-2xl p-5 flex items-center gap-4">
+          <span className="text-3xl">💊</span>
+          <div>
+            <h3 className="font-semibold text-[#1C2B2A] text-sm">Upload Prescription</h3>
+            <p className="text-xs text-[#6B7C7B]">Get medicines delivered with a valid prescription</p>
+          </div>
+          <button onClick={() => setShowUpload(true)} className="ml-auto px-4 py-2 bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white rounded-xl text-xs font-semibold hover:shadow-lg transition-all">Upload</button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center py-20">
@@ -85,3 +116,4 @@ export function Pharmacy() {
     </div>
   );
 }
+

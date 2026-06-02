@@ -57,6 +57,7 @@ import { TestDetails } from "./pages/user/TestDetails";
 import { BookDoctor } from "./pages/user/BookDoctor";
 import { DoctorProfile } from "./pages/user/DoctorProfile";
 import { Pharmacy } from "./pages/user/Pharmacy";
+import { PrescriptionHistory } from "./pages/user/PrescriptionHistory";
 import { Cart } from "./pages/user/Cart";
 import { Checkout } from "./pages/user/Checkout";
 import { Tracking } from "./pages/user/Tracking";
@@ -153,6 +154,7 @@ export const router = createBrowserRouter([
       { path: "book-doctor", element: <BookDoctor /> },
       { path: "doctor-profile/:id", element: <DoctorProfile /> },
       { path: "pharmacy", element: <Pharmacy /> },
+      { path: "prescription-history", element: <PrescriptionHistory /> },
       { path: "cart", element: <Cart /> },
       { path: "checkout", element: <Checkout /> },
       { path: "tracking", element: <Tracking /> },

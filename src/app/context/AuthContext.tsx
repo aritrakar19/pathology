@@ -26,8 +26,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const userRole = await getUserRole(currentUser.uid);
-        setRole(normalizeUserRole(userRole));
+        try {
+          const userRole = await getUserRole(currentUser.uid);
+          setRole(normalizeUserRole(userRole));
+        } catch (err) {
+          console.error("Failed to fetch user role:", err);
+          setRole("user"); // fallback to basic user
+        }
       } else {
         setRole(null);
       }
