@@ -55,6 +55,14 @@ export interface BookingRecord {
   payment_status?: "Pending" | "Paid" | "Refunded";
   amount?: number;
   report_reference?: string;
+  
+  // Marketplace fields
+  center_name?: string;
+  test_name?: string;
+  booking_type?: "center_visit" | "home_collection";
+  slot_id?: string;
+  price?: number;
+  patient_details?: any;
 }
 
 export interface CreateBookingInput {
@@ -68,6 +76,14 @@ export interface CreateBookingInput {
   bookingDate?: string;
   bookingTime?: string;
   amount?: number;
+
+  // Marketplace fields
+  centerName?: string;
+  testName?: string;
+  bookingType?: "center_visit" | "home_collection";
+  slotId?: string;
+  price?: number;
+  patientDetails?: any;
 }
 
 const BOOKINGS_COLLECTION = "bookings";
@@ -106,6 +122,14 @@ function fromSnapshot(snap: QuerySnapshot<DocumentData>): BookingRecord[] {
       payment_status: data.payment_status,
       amount: data.amount,
       report_reference: data.report_reference,
+      
+      // Marketplace fields
+      center_name: data.center_name,
+      test_name: data.test_name,
+      booking_type: data.booking_type,
+      slot_id: data.slot_id,
+      price: data.price,
+      patient_details: data.patient_details,
     };
   });
 }
@@ -137,6 +161,14 @@ export async function createBooking(input: CreateBookingInput): Promise<string> 
     booking_time: input.bookingTime ?? null,
     payment_status: "Pending",
     amount: input.amount ?? null,
+    
+    // Marketplace fields
+    center_name: input.centerName ?? null,
+    test_name: input.testName ?? null,
+    booking_type: input.bookingType ?? null,
+    slot_id: input.slotId ?? null,
+    price: input.price ?? null,
+    patient_details: input.patientDetails ?? null,
   });
 
   return bookingId;

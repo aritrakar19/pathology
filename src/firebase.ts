@@ -12,6 +12,8 @@ import {
   getDoc,
   setDoc,
 } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -31,6 +33,7 @@ getAnalytics(app);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
@@ -62,12 +65,23 @@ export async function signInWithGooglePopup() {
 }
 
 export async function getUserRole(uid: string): Promise<UserRole | null> {
-  const ref = doc(db, USERS_COLLECTION, uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return null;
-  const data = snap.data() as Partial<AppUser>;
-  const role = (data.role as string | undefined) ?? null;
-  return role ? normalizeUserRole(role) : null;
+  try {
+    console.log("[getUserRole] Fetching role for uid:", uid);
+    console.log("[getUserRole] DB project:", db.app.options.projectId);
+    const ref = doc(db, USERS_COLLECTION, uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      console.log("[getUserRole] Document does not exist for uid:", uid);
+      return null;
+    }
+    const data = snap.data() as Partial<AppUser>;
+    const role = (data.role as string | undefined) ?? null;
+    console.log("[getUserRole] Found role:", role);
+    return role ? normalizeUserRole(role) : null;
+  } catch (error) {
+    console.error("[getUserRole] Error fetching user role from Firestore:", error);
+    return null;
+  }
 }
 
 export async function saveUserWithRole(user: User, role: UserRole, phone?: string): Promise<void> {
