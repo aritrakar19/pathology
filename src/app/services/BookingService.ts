@@ -19,6 +19,8 @@ export interface Booking {
   serviceType: ServiceType;
   testId?: string;
   testName?: string;
+  centerId?: string;
+  centerName?: string;
   doctorId?: string;
   doctorName?: string;
   sampleMethod?: "home" | "lab";

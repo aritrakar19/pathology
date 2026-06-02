@@ -24,6 +24,9 @@ import { ResultEntryScreen } from "./pages/admin/ResultEntryScreen";
 import { DoctorVerificationScreen } from "./pages/admin/DoctorVerificationScreen";
 import { ReportGenerationScreen } from "./pages/admin/ReportGenerationScreen";
 import { PathologyWorkflowQuickReferencePage } from "./pages/admin/PathologyWorkflowQuickReferencePage";
+import { CenterProfile } from "./pages/admin/CenterProfile";
+import { ManageTests } from "./pages/admin/ManageTests";
+import { ManageSlots } from "./pages/admin/ManageSlots";
 import { DoctorDashboard } from "./pages/doctor/DoctorDashboard";
 import { MyPatients } from "./pages/doctor/MyPatients";
 import { UploadReports } from "./pages/doctor/UploadReports";
@@ -49,6 +52,7 @@ import { AppErrorBoundary } from "./pages/AppErrorBoundary";
 // User Application Pages
 import { UserHome } from "./pages/user/UserHome";
 import { BookTest } from "./pages/user/BookTest";
+
 import { TestDetails } from "./pages/user/TestDetails";
 import { BookDoctor } from "./pages/user/BookDoctor";
 import { DoctorProfile } from "./pages/user/DoctorProfile";
@@ -143,6 +147,7 @@ export const router = createBrowserRouter([
       { index: true, element: <UserHome /> },
       { path: "home", element: <UserHome /> },
       { path: "book-test", element: <BookTest /> },
+
       { path: "test-category/:id", element: <TestCategory /> },
       { path: "test-details/:id", element: <TestDetails /> },
       { path: "book-doctor", element: <BookDoctor /> },
@@ -193,6 +198,9 @@ export const router = createBrowserRouter([
     errorElement: <AppErrorBoundary />,
     children: [
       { index: true, element: <AdminDashboard /> },
+      { path: "center-profile", element: <CenterProfile /> },
+      { path: "manage-tests", element: <ManageTests /> },
+      { path: "manage-slots", element: <ManageSlots /> },
       { path: "doctors", element: <ManageDoctors /> },
       { path: "patients", element: <ManagePatients /> },
       { path: "test-categories", element: <TestCategories /> },

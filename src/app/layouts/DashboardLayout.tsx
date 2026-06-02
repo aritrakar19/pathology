@@ -20,6 +20,7 @@ import {
   ClipboardList,
   CheckCircle,
   FileCheck,
+  Building,
 } from "lucide-react";
 import { useState } from "react";
 import React from "react";
@@ -38,6 +39,9 @@ export function DashboardLayout({ role }: DashboardLayoutProps) {
 
   const adminMenuItems = [
     { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/admin/center-profile", label: "Center Profile", icon: Building },
+    { path: "/admin/manage-tests", label: "Marketplace Tests", icon: TestTube },
+    { path: "/admin/manage-slots", label: "Manage Slots", icon: Calendar },
     { path: "/admin/doctors", label: "Manage Doctors", icon: UserCog },
     { path: "/admin/patients", label: "Manage Patients", icon: Users },
     { path: "/admin/test-categories", label: "Test Categories", icon: TestTube },
