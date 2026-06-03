@@ -63,11 +63,13 @@ export function UserLayout() {
           </Link>
 
           {/* Center: Location (md+) */}
-          <button className="hidden md:flex items-center gap-1.5 text-sm text-[#1C2B2A] hover:text-[#1FAF9A] transition-colors px-3 py-1.5 rounded-xl hover:bg-[#F4F8F7]">
-            <MapPin className="w-4 h-4 text-[#1FAF9A]" />
-            <span className="font-medium">Delhi NCR</span>
-            <ChevronDown className="w-3.5 h-3.5 text-[#6B7C7B]" />
-          </button>
+          {location.pathname !== "/user/ai-assistant" && (
+            <button className="hidden md:flex items-center gap-1.5 text-sm text-[#1C2B2A] hover:text-[#1FAF9A] transition-colors px-3 py-1.5 rounded-xl hover:bg-[#F4F8F7]">
+              <MapPin className="w-4 h-4 text-[#1FAF9A]" />
+              <span className="font-medium">Delhi NCR</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#6B7C7B]" />
+            </button>
+          )}
 
           {/* Right: Actions */}
           <div className="flex items-center gap-1 md:gap-2">

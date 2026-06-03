@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { PrescriptionScan, PrescriptionService } from "../../services/PrescriptionService";
 import { useAuth } from "../../context/AuthContext";
 import { Loader2, ArrowLeft, Calendar, FileText, ChevronRight } from "lucide-react";
