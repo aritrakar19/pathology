@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Sparkles, Loader2, AlertTriangle } from "lucide-react";
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { db } from "../../../firebase";
+import { useAuth } from "../../context/AuthContext";
 
 interface Message {
   id: string;
-  text: string;
-  sender: "user" | "ai";
-  time: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: any;
 }
 
 const suggestions = [
@@ -35,18 +38,34 @@ Important:
 - Keep responses simple and patient-friendly.`;
 
 export function AIAssistant() {
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-      id: "1", 
-      text: "Hello! 👋 I'm your MediPath AI Health Assistant. How can I help you today?", 
-      sender: "ai", 
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-    },
-  ]);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Listen for messages in current user's conversation
+  useEffect(() => {
+    if (!user) return;
+    
+    const q = query(
+      collection(db, "aiChats", user.uid, "messages"),
+      orderBy("createdAt", "asc")
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Message[];
+      setMessages(msgs);
+    }, (err) => {
+      console.error("Error fetching messages:", err);
+    });
+    
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => { 
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); 
@@ -61,8 +80,8 @@ export function AIAssistant() {
     const apiMessages = [
       { role: "system", content: SYSTEM_PROMPT },
       ...chatHistory.map(m => ({
-        role: m.sender === "user" ? "user" : "assistant",
-        content: m.text
+        role: m.role,
+        content: m.content
       })),
       { role: "user", content: newText }
     ];
@@ -92,32 +111,33 @@ export function AIAssistant() {
 
   const handleSend = async (text?: string) => {
     const msgText = text || input;
-    if (!msgText.trim() || isLoading) return;
+    if (!msgText.trim() || isLoading || !user) return;
     
     setError(null);
-    const userMsg: Message = { 
-      id: Date.now().toString(), 
-      text: msgText, 
-      sender: "user", 
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-    };
-    
-    const currentMessages = [...messages];
-    setMessages([...currentMessages, userMsg]);
     setInput("");
     setIsLoading(true);
-
+    
     try {
-      const responseText = await callGroqAPI(currentMessages, msgText);
+      // Save user message
+      await addDoc(collection(db, "aiChats", user.uid, "messages"), {
+        role: "user",
+        content: msgText,
+        createdAt: serverTimestamp()
+      });
       
-      const aiMsg: Message = { 
-        id: (Date.now() + 1).toString(), 
-        text: responseText, 
-        sender: "ai", 
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-      };
+      // Prepare history for API call
+      const chatHistory = [...messages]; 
       
-      setMessages(prev => [...prev, aiMsg]);
+      // Fetch AI response
+      const responseText = await callGroqAPI(chatHistory, msgText);
+      
+      // Save AI response
+      await addDoc(collection(db, "aiChats", user.uid, "messages"), {
+        role: "assistant",
+        content: responseText,
+        createdAt: serverTimestamp()
+      });
+      
     } catch (err: any) {
       setError(err.message || "An error occurred while connecting to the AI assistant.");
     } finally {
@@ -149,14 +169,29 @@ export function AIAssistant() {
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 scrollbar-thin scrollbar-thumb-[#E6F0EE] scrollbar-track-transparent">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`flex items-end gap-2 max-w-[85%] ${msg.sender === "user" ? "flex-row-reverse" : ""}`}>
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${msg.sender === "ai" ? "bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B]" : "bg-[#E6F0EE]"}`}>
-                {msg.sender === "ai" ? <Bot className="w-4 h-4 text-white" /> : <User className="w-4 h-4 text-[#6B7C7B]" />}
+        
+        {/* Welcome message if no chat history */}
+        {messages.length === 0 && !isLoading && (
+          <div className="flex justify-start">
+            <div className="flex items-end gap-2 max-w-[85%]">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] shadow-sm">
+                <Bot className="w-4 h-4 text-white" />
               </div>
-              <div className={`px-4 py-3 rounded-2xl text-sm ${msg.sender === "user" ? "bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white rounded-br-md" : "bg-white border border-[#E6F0EE] text-[#1C2B2A] rounded-bl-md whitespace-pre-wrap"}`}>
-                {msg.text}
+              <div className="px-4 py-3 rounded-2xl text-sm bg-white border border-[#E6F0EE] text-[#1C2B2A] rounded-bl-md shadow-sm whitespace-pre-wrap">
+                Hello! 👋 I'm your MediPath AI Health Assistant. How can I help you today?
+              </div>
+            </div>
+          </div>
+        )}
+
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`flex items-end gap-2 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${msg.role === "assistant" ? "bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B]" : "bg-[#E6F0EE]"}`}>
+                {msg.role === "assistant" ? <Bot className="w-4 h-4 text-white" /> : <User className="w-4 h-4 text-[#6B7C7B]" />}
+              </div>
+              <div className={`px-4 py-3 rounded-2xl text-sm ${msg.role === "user" ? "bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] text-white rounded-br-md shadow-sm" : "bg-white border border-[#E6F0EE] text-[#1C2B2A] rounded-bl-md shadow-sm whitespace-pre-wrap"}`}>
+                {msg.content}
               </div>
             </div>
           </div>
@@ -165,10 +200,10 @@ export function AIAssistant() {
         {isLoading && (
           <div className="flex justify-start">
             <div className="flex items-end gap-2 max-w-[85%]">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B]">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#1FAF9A] to-[#0E7C6B] shadow-sm">
                 <Bot className="w-4 h-4 text-white" />
               </div>
-              <div className="px-4 py-3 rounded-2xl bg-white border border-[#E6F0EE] rounded-bl-md flex items-center gap-2">
+              <div className="px-4 py-3 rounded-2xl bg-white border border-[#E6F0EE] rounded-bl-md flex items-center gap-2 shadow-sm">
                 <Loader2 className="w-4 h-4 text-[#1FAF9A] animate-spin" />
                 <span className="text-sm text-[#6B7C7B]">Typing...</span>
               </div>
@@ -177,8 +212,8 @@ export function AIAssistant() {
         )}
         
         {error && (
-          <div className="flex justify-center">
-            <div className="bg-red-50 text-red-600 text-xs px-3 py-2 rounded-lg border border-red-100 max-w-md text-center">
+          <div className="flex justify-center my-2">
+            <div className="bg-red-50 text-red-600 text-xs px-4 py-2.5 rounded-xl border border-red-100 max-w-md text-center shadow-sm">
               {error}
             </div>
           </div>
@@ -188,19 +223,19 @@ export function AIAssistant() {
       </div>
 
       {/* Suggestions */}
-      {messages.length <= 1 && !isLoading && (
-        <div className="flex flex-wrap gap-2 mb-3">
+      {messages.length === 0 && !isLoading && (
+        <div className="flex flex-wrap gap-2 mb-3 shrink-0">
           {suggestions.map((s) => (
-            <button key={s} onClick={() => handleSend(s)} className="px-3 py-2 bg-white border border-[#E6F0EE] rounded-xl text-xs text-[#6B7C7B] hover:border-[#1FAF9A] hover:text-[#1FAF9A] transition-all flex items-center gap-1">
+            <button key={s} onClick={() => handleSend(s)} className="px-3 py-2 bg-white border border-[#E6F0EE] rounded-xl text-xs text-[#6B7C7B] hover:border-[#1FAF9A] hover:text-[#1FAF9A] hover:shadow-sm transition-all flex items-center gap-1">
               <Sparkles className="w-3 h-3" /> {s}
             </button>
           ))}
         </div>
       )}
 
-      {/* Input */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2 bg-white border border-[#E6F0EE] rounded-2xl p-2 shadow-sm focus-within:border-[#1FAF9A] focus-within:ring-1 focus-within:ring-[#1FAF9A]/20 transition-all">
+      {/* Input Area */}
+      <div className="flex flex-col gap-2 shrink-0">
+        <div className="flex items-center gap-2 bg-white border border-[#E6F0EE] rounded-2xl p-2 shadow-sm focus-within:border-[#1FAF9A] focus-within:ring-2 focus-within:ring-[#1FAF9A]/20 transition-all">
           <input
             type="text"
             value={input}
@@ -213,7 +248,7 @@ export function AIAssistant() {
           <button 
             onClick={() => handleSend()} 
             disabled={isLoading || !input.trim()}
-            className="w-10 h-10 bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] rounded-xl flex items-center justify-center text-white hover:shadow-lg transition-all disabled:opacity-50 disabled:hover:shadow-none"
+            className="w-10 h-10 bg-gradient-to-r from-[#1FAF9A] to-[#0E7C6B] rounded-xl flex items-center justify-center text-white hover:shadow-md transition-all disabled:opacity-50 disabled:hover:shadow-none shrink-0"
           >
             <Send className="w-4 h-4" />
           </button>
